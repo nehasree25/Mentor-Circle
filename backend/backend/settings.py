@@ -152,8 +152,10 @@ if not DEBUG:
     X_FRAME_OPTIONS = "DENY"
 
 # CSRF trusted origins
-CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="http://localhost:5173,http://127.0.0.1:5173", cast=Csv())
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://mentor-circle.onrender.com",
+    "https://mentor-circle-app.vercel.app",
+]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -163,7 +165,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # CORS Configuration - Allow frontend to communicate with backend
 # ============================================================================
 
-CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", default="http://localhost:5173,http://127.0.0.1:5173", cast=Csv())
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "https://mentor-circle-app.vercel.app",
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
