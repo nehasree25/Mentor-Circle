@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 
 // Backend Base URL
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -11,7 +11,6 @@ const axiosInstance = axios.create({
 
 // ================================
 // Request Interceptor
-// Adds JWT token to every request
 // ================================
 axiosInstance.interceptors.request.use(
   (config) => {
@@ -26,22 +25,20 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ======================================
+// ================================
 // Response Interceptor
-// Handles automatic token refresh
-// ======================================
+// ================================
 axiosInstance.interceptors.response.use(
   (response) => response,
 
   async (error) => {
     const originalRequest = error.config;
 
-    // Skip refresh for login/signup requests
+    // Skip refresh for auth routes
     const isAuthRoute =
-      originalRequest?.url?.includes("/api/auth/login/") ||
-      originalRequest?.url?.includes("/api/auth/signup/");
+      originalRequest?.url?.includes("auth/login") ||
+      originalRequest?.url?.includes("auth/signup");
 
-    // Token expired
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
@@ -52,16 +49,15 @@ axiosInstance.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem("refresh_token");
 
-        // No refresh token → logout
         if (!refreshToken) {
           localStorage.clear();
           window.location.href = "/login";
           return Promise.reject(error);
         }
 
-        // Refresh access token
+        // Refresh token
         const response = await axios.post(
-          `${API_BASE_URL}/api/auth/refresh/`,
+          `${API_BASE_URL}/auth/token/refresh/`,
           {
             refresh: refreshToken,
           }
@@ -69,15 +65,12 @@ axiosInstance.interceptors.response.use(
 
         const { access } = response.data;
 
-        // Save new token
         localStorage.setItem("access_token", access);
 
-        // Retry original request
         originalRequest.headers.Authorization = `Bearer ${access}`;
 
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        // Refresh failed → logout
         localStorage.clear();
 
         toast.error("Session expired. Please login again.");
