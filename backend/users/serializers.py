@@ -76,7 +76,11 @@ class SignupSerializer(serializers.ModelSerializer):
         default='beginner'
     )
     skills = serializers.CharField(required=False, allow_blank=True)
-    years_of_experience = serializers.IntegerField(required=False, min_value=0)
+    years_of_experience = serializers.IntegerField(
+    required=False,
+    min_value=0,
+    allow_null=True
+    )
     is_mentor = serializers.BooleanField(required=False, default=False)
     mentorship_expertise = serializers.CharField(required=False, allow_blank=True)
     learning_goals = serializers.CharField(required=False, allow_blank=True)

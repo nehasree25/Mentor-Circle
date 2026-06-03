@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { authService } from "../services/authService";
@@ -65,10 +65,17 @@ const Signup = () => {
       const payload = {
         ...form,
         is_mentor: form.role === "mentor",
-        years_of_experience: form.years_of_experience
-          ? parseInt(form.years_of_experience)
-          : null,
       };
+
+      // Only add years_of_experience for mentors
+      if (
+        form.role === "mentor" &&
+        form.years_of_experience !== ""
+      ) {
+        payload.years_of_experience = parseInt(
+          form.years_of_experience
+        );
+      }
 
       const data = await authService.signup(payload);
       // Store tokens and user
