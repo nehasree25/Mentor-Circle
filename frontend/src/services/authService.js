@@ -1,4 +1,4 @@
-import axiosInstance from "../api/axios";
+import axiosInstance from "../axios";
 
 export const authService = {
   // =========================
@@ -6,7 +6,7 @@ export const authService = {
   // =========================
   signup: async (data) => {
     const response = await axiosInstance.post(
-      "api/auth/signup/",
+      "auth/signup/",
       data
     );
 
@@ -18,7 +18,7 @@ export const authService = {
   // =========================
   login: async (data) => {
     const response = await axiosInstance.post(
-      "api/auth/login/",
+      "auth/login/",
       data
     );
 
@@ -31,7 +31,7 @@ export const authService = {
   profile: {
     get: async () => {
       const response = await axiosInstance.get(
-        "api/auth/profile/"
+        "auth/profile/"
       );
 
       return response.data;
@@ -39,7 +39,7 @@ export const authService = {
 
     update: async (data) => {
       const response = await axiosInstance.put(
-        "api/auth/profile/",
+        "auth/profile/",
         data
       );
 
@@ -53,7 +53,7 @@ export const authService = {
   userprofile: {
     get: async () => {
       const response = await axiosInstance.get(
-        "api/auth/userprofile/"
+        "auth/userprofile/"
       );
 
       return response.data;
@@ -61,7 +61,7 @@ export const authService = {
 
     update: async (data) => {
       const response = await axiosInstance.patch(
-        "api/auth/userprofile/",
+        "auth/userprofile/",
         data
       );
 
@@ -75,7 +75,7 @@ export const authService = {
   stats: {
     get: async () => {
       const response = await axiosInstance.get(
-        "api/profile/stats/"
+        "profile/stats/"
       );
 
       return response.data;
