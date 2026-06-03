@@ -154,7 +154,7 @@ if not DEBUG:
 # CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
     "https://mentor-circle.onrender.com",
-    "https://mentor-circle-app.vercel.app",
+    "https://mentor-circle-nine.vercel.app",
 ]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -167,9 +167,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://mentor-circle-app.vercel.app",
+    "https://mentor-circle-nine.vercel.app",
 ]
-
 CORS_ALLOW_CREDENTIALS = True
 
 # ============================================================================
