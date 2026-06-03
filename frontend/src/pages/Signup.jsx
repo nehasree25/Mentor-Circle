@@ -11,7 +11,6 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Form State
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -21,19 +20,19 @@ const Signup = () => {
     password2: "",
     role: "student",
 
-    // Student fields
+    // Student
     interests: "",
     experience_level: "beginner",
     skills: "",
     learning_goals: "",
 
-    // Mentor fields
+    // Mentor
     mentorship_expertise: "",
     bio: "",
     years_of_experience: "",
   });
 
-  // Handle Input Changes
+  // Handle Change
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -42,7 +41,6 @@ const Signup = () => {
       [name]: value,
     });
 
-    // Clear field error when typing
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -51,45 +49,38 @@ const Signup = () => {
     }
   };
 
-  // Frontend Validation
+  // Validation
   const validateForm = () => {
     const newErrors = {};
 
-    if (!form.first_name.trim()) {
+    if (!form.first_name.trim())
       newErrors.first_name = "First name is required";
-    }
 
-    if (!form.last_name.trim()) {
+    if (!form.last_name.trim())
       newErrors.last_name = "Last name is required";
-    }
 
-    if (!form.username.trim()) {
+    if (!form.username.trim())
       newErrors.username = "Username is required";
-    }
 
-    if (!form.email.trim()) {
+    if (!form.email.trim())
       newErrors.email = "Email is required";
-    }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       newErrors.email = "Invalid email format";
-    }
 
-    if (form.password.length < 8) {
+    if (form.password.length < 8)
       newErrors.password =
         "Password must be at least 8 characters";
-    }
 
-    if (form.password !== form.password2) {
+    if (form.password !== form.password2)
       newErrors.password2 = "Passwords do not match";
-    }
 
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit Handler
+  // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -110,7 +101,7 @@ const Signup = () => {
         role: form.role,
       };
 
-      // Student Payload
+      // Student
       if (form.role === "student") {
         payload = {
           ...payload,
@@ -121,7 +112,7 @@ const Signup = () => {
         };
       }
 
-      // Mentor Payload
+      // Mentor
       if (form.role === "mentor") {
         payload = {
           ...payload,
@@ -137,12 +128,9 @@ const Signup = () => {
         };
       }
 
-      console.log("Signup Payload:", payload);
-
-      // API Call
       const data = await authService.signup(payload);
 
-      // Store Session
+      // Save session
       await setSession({
         user: data.user,
         access: data.access,
@@ -198,245 +186,362 @@ const Signup = () => {
 
   return (
     <main className="min-h-screen bg-appbg py-8 px-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 overflow-hidden rounded-3xl shadow-2xl">
 
-        <h2 className="text-3xl font-bold text-center mb-8">
-          Create Account
-        </h2>
+          {/* LEFT SIDE */}
+          <section className="hidden md:flex flex-col justify-between bg-navy p-12 text-white">
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4"
-        >
+            <div className="space-y-8">
+              <h1 className="text-5xl font-bold leading-tight">
+                Join the Future
+                <br />
+                of{" "}
+                <span className="text-royal">
+                  STEM Learning
+                </span>
+              </h1>
 
-          {/* First Name */}
-          <div>
-            <input
-              type="text"
-              name="first_name"
-              placeholder="First Name"
-              value={form.first_name}
-              onChange={handleChange}
-              className="w-full border rounded-xl p-3"
-            />
-            {errors.first_name && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.first_name}
+              <p className="text-textsecondary text-lg leading-relaxed max-w-sm">
+                Collaborate with peers, discover
+                mentors, and grow together in
+                AI-powered learning circles.
               </p>
-            )}
-          </div>
+            </div>
 
-          {/* Last Name */}
-          <div>
-            <input
-              type="text"
-              name="last_name"
-              placeholder="Last Name"
-              value={form.last_name}
-              onChange={handleChange}
-              className="w-full border rounded-xl p-3"
-            />
-            {errors.last_name && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.last_name}
+            <div className="bg-white/5 rounded-2xl p-5">
+              <p className="text-textsecondary text-sm">
+                Learn Web Development,
+                AI/ML, Cybersecurity, DSA,
+                and more.
               </p>
-            )}
-          </div>
+            </div>
+          </section>
 
-          {/* Username */}
-          <div>
-            <input
-              type="text"
-              name="username"
-              placeholder="Username"
-              value={form.username}
-              onChange={handleChange}
-              className="w-full border rounded-xl p-3"
-            />
-            {errors.username && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.username}
-              </p>
-            )}
-          </div>
+          {/* RIGHT SIDE */}
+          <section className="bg-white p-8 md:p-12">
+            <div className="max-w-md mx-auto">
 
-          {/* Email */}
-          <div>
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
-              className="w-full border rounded-xl p-3"
-            />
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.email}
-              </p>
-            )}
-          </div>
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold text-navy">
+                  Create Account
+                </h2>
 
-          {/* Password */}
-          <div>
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              className="w-full border rounded-xl p-3"
-            />
-            {errors.password && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.password}
-              </p>
-            )}
-          </div>
+                <p className="text-textsecondary mt-2 text-sm">
+                  Start your mentorship journey today.
+                </p>
+              </div>
 
-          {/* Confirm Password */}
-          <div>
-            <input
-              type="password"
-              name="password2"
-              placeholder="Confirm Password"
-              value={form.password2}
-              onChange={handleChange}
-              className="w-full border rounded-xl p-3"
-            />
-            {errors.password2 && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.password2}
-              </p>
-            )}
-          </div>
-
-          {/* Role */}
-          <div>
-            <select
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              className="w-full border rounded-xl p-3"
-            >
-              <option value="student">
-                Student
-              </option>
-              <option value="mentor">
-                Mentor
-              </option>
-            </select>
-          </div>
-
-          {/* Student Fields */}
-          {form.role === "student" && (
-            <>
-              <input
-                type="text"
-                name="interests"
-                placeholder="Interests"
-                value={form.interests}
-                onChange={handleChange}
-                className="w-full border rounded-xl p-3"
-              />
-
-              <select
-                name="experience_level"
-                value={form.experience_level}
-                onChange={handleChange}
-                className="w-full border rounded-xl p-3"
+              {/* FORM */}
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-4"
               >
-                <option value="beginner">
-                  Beginner
-                </option>
-                <option value="intermediate">
-                  Intermediate
-                </option>
-                <option value="advanced">
-                  Advanced
-                </option>
-              </select>
 
-              <input
-                type="text"
-                name="skills"
-                placeholder="Skills"
-                value={form.skills}
-                onChange={handleChange}
-                className="w-full border rounded-xl p-3"
-              />
+                {/* Name */}
+                <div className="grid grid-cols-2 gap-4">
 
-              <textarea
-                name="learning_goals"
-                placeholder="Learning Goals"
-                value={form.learning_goals}
-                onChange={handleChange}
-                className="w-full border rounded-xl p-3"
-              />
-            </>
-          )}
+                  <div>
+                    <input
+                      type="text"
+                      name="first_name"
+                      placeholder="First Name"
+                      value={form.first_name}
+                      onChange={handleChange}
+                      disabled={loading}
+                      className={`w-full rounded-xl border px-5 py-3.5 outline-none transition-all ${
+                        errors.first_name
+                          ? "border-red-500 bg-red-50"
+                          : "border-borderline focus:border-royal focus:ring-4 focus:ring-softblue"
+                      }`}
+                    />
 
-          {/* Mentor Fields */}
-          {form.role === "mentor" && (
-            <>
-              <input
-                type="text"
-                name="mentorship_expertise"
-                placeholder="Mentorship Expertise"
-                value={form.mentorship_expertise}
-                onChange={handleChange}
-                className="w-full border rounded-xl p-3"
-              />
+                    {errors.first_name && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.first_name}
+                      </p>
+                    )}
+                  </div>
 
-              <input
-                type="text"
-                name="skills"
-                placeholder="Skills"
-                value={form.skills}
-                onChange={handleChange}
-                className="w-full border rounded-xl p-3"
-              />
+                  <div>
+                    <input
+                      type="text"
+                      name="last_name"
+                      placeholder="Last Name"
+                      value={form.last_name}
+                      onChange={handleChange}
+                      disabled={loading}
+                      className={`w-full rounded-xl border px-5 py-3.5 outline-none transition-all ${
+                        errors.last_name
+                          ? "border-red-500 bg-red-50"
+                          : "border-borderline focus:border-royal focus:ring-4 focus:ring-softblue"
+                      }`}
+                    />
 
-              <input
-                type="number"
-                name="years_of_experience"
-                placeholder="Years of Experience"
-                value={form.years_of_experience}
-                onChange={handleChange}
-                className="w-full border rounded-xl p-3"
-              />
+                    {errors.last_name && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.last_name}
+                      </p>
+                    )}
+                  </div>
+                </div>
 
-              <textarea
-                name="bio"
-                placeholder="Bio"
-                value={form.bio}
-                onChange={handleChange}
-                className="w-full border rounded-xl p-3"
-              />
-            </>
-          )}
+                {/* Username */}
+                <div>
+                  <input
+                    type="text"
+                    name="username"
+                    placeholder="Username"
+                    value={form.username}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className={`w-full rounded-xl border px-5 py-3.5 outline-none transition-all ${
+                      errors.username
+                        ? "border-red-500 bg-red-50"
+                        : "border-borderline focus:border-royal focus:ring-4 focus:ring-softblue"
+                    }`}
+                  />
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white rounded-xl p-3 font-bold"
-          >
-            {loading
-              ? "Creating..."
-              : "Create Account"}
-          </button>
+                  {errors.username && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.username}
+                    </p>
+                  )}
+                </div>
 
-          <p className="text-center text-sm">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-blue-600 font-semibold"
-            >
-              Login
-            </Link>
-          </p>
-        </form>
+                {/* Email */}
+                <div>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    value={form.email}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className={`w-full rounded-xl border px-5 py-3.5 outline-none transition-all ${
+                      errors.email
+                        ? "border-red-500 bg-red-50"
+                        : "border-borderline focus:border-royal focus:ring-4 focus:ring-softblue"
+                    }`}
+                  />
+
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.email}
+                    </p>
+                  )}
+                </div>
+
+                {/* Passwords */}
+                <div className="grid grid-cols-2 gap-4">
+
+                  <div>
+                    <input
+                      type="password"
+                      name="password"
+                      placeholder="Password"
+                      value={form.password}
+                      onChange={handleChange}
+                      disabled={loading}
+                      className={`w-full rounded-xl border px-5 py-3.5 outline-none transition-all ${
+                        errors.password
+                          ? "border-red-500 bg-red-50"
+                          : "border-borderline focus:border-royal focus:ring-4 focus:ring-softblue"
+                      }`}
+                    />
+
+                    {errors.password && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.password}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <input
+                      type="password"
+                      name="password2"
+                      placeholder="Confirm Password"
+                      value={form.password2}
+                      onChange={handleChange}
+                      disabled={loading}
+                      className={`w-full rounded-xl border px-5 py-3.5 outline-none transition-all ${
+                        errors.password2
+                          ? "border-red-500 bg-red-50"
+                          : "border-borderline focus:border-royal focus:ring-4 focus:ring-softblue"
+                      }`}
+                    />
+
+                    {errors.password2 && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.password2}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Role */}
+                <div className="space-y-3">
+
+                  <label className="text-sm font-semibold text-navy">
+                    Who are you?
+                  </label>
+
+                  <div className="grid grid-cols-2 gap-3">
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          role: "student",
+                        })
+                      }
+                      className={`rounded-xl border-2 py-4 font-semibold transition-all ${
+                        form.role === "student"
+                          ? "border-royal bg-softblue text-royal"
+                          : "border-borderline"
+                      }`}
+                    >
+                      👨‍🎓 Student
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          role: "mentor",
+                        })
+                      }
+                      className={`rounded-xl border-2 py-4 font-semibold transition-all ${
+                        form.role === "mentor"
+                          ? "border-royal bg-softblue text-royal"
+                          : "border-borderline"
+                      }`}
+                    >
+                      🎓 Mentor
+                    </button>
+                  </div>
+                </div>
+
+                {/* STUDENT */}
+                {form.role === "student" && (
+                  <>
+                    <input
+                      type="text"
+                      name="interests"
+                      placeholder="Interests"
+                      value={form.interests}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-borderline px-5 py-3.5"
+                    />
+
+                    <select
+                      name="experience_level"
+                      value={form.experience_level}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-borderline px-5 py-3.5"
+                    >
+                      <option value="beginner">
+                        Beginner
+                      </option>
+
+                      <option value="intermediate">
+                        Intermediate
+                      </option>
+
+                      <option value="advanced">
+                        Advanced
+                      </option>
+                    </select>
+
+                    <input
+                      type="text"
+                      name="skills"
+                      placeholder="Skills"
+                      value={form.skills}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-borderline px-5 py-3.5"
+                    />
+
+                    <textarea
+                      name="learning_goals"
+                      placeholder="Learning Goals"
+                      value={form.learning_goals}
+                      onChange={handleChange}
+                      rows="3"
+                      className="w-full rounded-xl border border-borderline px-5 py-3.5"
+                    />
+                  </>
+                )}
+
+                {/* MENTOR */}
+                {form.role === "mentor" && (
+                  <>
+                    <input
+                      type="text"
+                      name="mentorship_expertise"
+                      placeholder="Mentorship Expertise"
+                      value={form.mentorship_expertise}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-borderline px-5 py-3.5"
+                    />
+
+                    <input
+                      type="text"
+                      name="skills"
+                      placeholder="Skills"
+                      value={form.skills}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-borderline px-5 py-3.5"
+                    />
+
+                    <input
+                      type="number"
+                      name="years_of_experience"
+                      placeholder="Years of Experience"
+                      value={form.years_of_experience}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-borderline px-5 py-3.5"
+                    />
+
+                    <textarea
+                      name="bio"
+                      placeholder="Short Bio"
+                      value={form.bio}
+                      onChange={handleChange}
+                      rows="3"
+                      className="w-full rounded-xl border border-borderline px-5 py-3.5"
+                    />
+                  </>
+                )}
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full rounded-xl bg-royal hover:bg-darkblue text-white font-bold py-3.5 transition-all"
+                >
+                  {loading
+                    ? "Creating account..."
+                    : "Create Account"}
+                </button>
+
+                {/* Login */}
+                <p className="text-center text-sm text-textsecondary">
+                  Already have an account?{" "}
+                  <Link
+                    to="/login"
+                    className="text-royal font-bold"
+                  >
+                    Sign in
+                  </Link>
+                </p>
+              </form>
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   );
