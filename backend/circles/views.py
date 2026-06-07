@@ -15,11 +15,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.contrib.auth.models import User
 from drf_spectacular.utils import extend_schema
 
-from .models import Circle, JoinRequest, Discussion
+from .models import Circle, JoinRequest
+from discussions.models import Discussion
 from .serializers import (
     CircleCreateSerializer, CircleListSerializer, CircleDetailSerializer,
     JoinRequestCreateSerializer, JoinRequestListSerializer, JoinRequestDetailSerializer,
@@ -127,9 +128,10 @@ def circle_list(request):
     
     Shows both public and private circles.
     """
-    circles = Circle.objects.filter(is_active=True, is_deleted=False).prefetch_related(
-        'members', 
-        'mentors',
+    circles = Circle.objects.filter(is_active=True, is_deleted=False).annotate(
+        member_count=Count('members', distinct=True),
+        mentor_count=Count('mentors', distinct=True)
+    ).prefetch_related(
         'created_by__profile'
     )
     
@@ -341,9 +343,10 @@ def search_circles(request):
     - /api/circles/search/?search=Python
     - /api/circles/search/?location=Online&skill_level=beginner
     """
-    circles = Circle.objects.filter(is_active=True, is_deleted=False).prefetch_related(
-        'members', 
-        'mentors',
+    circles = Circle.objects.filter(is_active=True, is_deleted=False).annotate(
+        member_count=Count('members', distinct=True),
+        mentor_count=Count('mentors', distinct=True)
+    ).prefetch_related(
         'created_by__profile'
     )
     
@@ -417,9 +420,10 @@ def my_circles(request):
     circles = Circle.objects.filter(
         Q(is_active=True, is_deleted=False),
         Q(members=user) | Q(created_by=user) | Q(mentors=user)
-    ).distinct().prefetch_related(
-        'members', 
-        'mentors',
+    ).distinct().annotate(
+        member_count=Count('members', distinct=True),
+        mentor_count=Count('mentors', distinct=True)
+    ).prefetch_related(
         'created_by__profile'
     )
     

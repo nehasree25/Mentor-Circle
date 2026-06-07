@@ -18,24 +18,35 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    """
-    Serializer for UserProfile model.
-    Extended user information specific to MentorCircle.
-    """
-    
-    # Nest user information
     user = UserSerializer(read_only=True)
-    
+
+    domain_choices = serializers.SerializerMethodField()
+
     class Meta:
         model = UserProfile
         fields = (
-            'id', 'user', 'bio', 'profile_picture', 'role', 'interests',
-            'experience_level', 'skills', 'years_of_experience', 'is_mentor', 
+            'id', 'user', 'bio', 'profile_picture', 'role',
+            'domain', 'domain_choices', 'interests', 'skills',
+            'experience_level', 'years_of_experience', 'is_mentor',
             'mentorship_expertise',
-            'learning_goals', 'created_at', 'updated_at'
+            'learning_goals',
+            'github', 'linkedin', 'availability',
+            'created_at', 'updated_at'
         )
-        read_only_fields = ('id', 'user', 'created_at', 'updated_at')
+        read_only_fields = (
+            'id',
+            'user',
+            'created_at',
+            'updated_at',
+            'domain_choices'
+        )
 
+    def get_domain_choices(self, obj):
+        """Return available domain options from INTEREST_CHOICES"""
+        return [
+            {"value": value, "label": label}
+            for value, label in UserProfile.INTEREST_CHOICES
+        ]
 
 class SignupSerializer(serializers.ModelSerializer):
     """
@@ -65,6 +76,11 @@ class SignupSerializer(serializers.ModelSerializer):
         required=False,
         default='student'
     )
+    domain = serializers.ChoiceField(
+        choices=UserProfile.INTEREST_CHOICES,
+        required=False,
+        allow_null=True
+    )
     interests = serializers.CharField(
         max_length=200,
         required=False,
@@ -91,7 +107,7 @@ class SignupSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'username', 'email', 'first_name', 'last_name',
             'password', 'password2',
-            'role', 'interests', 'experience_level',
+            'role', 'domain', 'interests', 'experience_level',
             'skills', 'years_of_experience', 'is_mentor',
             'mentorship_expertise', 'learning_goals', 'bio'
         )
@@ -146,7 +162,7 @@ class SignupSerializer(serializers.ModelSerializer):
         # Extract profile fields
         profile_fields = {}
         profile_field_names = [
-            'role', 'interests', 'experience_level', 'skills',
+            'role', 'domain', 'interests', 'experience_level', 'skills',
             'years_of_experience', 'is_mentor', 'mentorship_expertise',
             'learning_goals', 'bio'
         ]

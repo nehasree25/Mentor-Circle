@@ -92,17 +92,21 @@ const Login = () => {
       <div className="w-full max-w-5xl grid md:grid-cols-2 overflow-hidden rounded-3xl shadow-2xl">
         {/* LEFT SECTION */}
         <section className="hidden md:flex flex-col justify-between bg-navy p-12 text-white">
-          <div className="space-y-8">
+          <div>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight">
               Welcome Back to<br />
               <span className="text-royal">STEM Learning</span>
             </h1>
-            <p className="text-textsecondary text-lg leading-relaxed max-w-sm">
+            <p className="text-textsecondary text-lg leading-relaxed mt-4 max-w-sm">
               Continue your learning journey, access your circles, and pick up where you left off.
             </p>
           </div>
           
-          <div className="bg-white/5 rounded-2xl p-5 mt-8">
+          <div className="flex justify-center items-center flex-grow py-8">
+            <img src="/assets/user.png" alt="User" className="w-full h-auto max-w-xs object-contain scale-125" />
+          </div>
+          
+          <div className="bg-white/5 rounded-2xl p-5">
             <p className="text-textsecondary text-sm">
               Access your personalized dashboard, mentors, and learning circles.
             </p>
@@ -113,6 +117,10 @@ const Login = () => {
         <section className="bg-white p-8 md:p-12">
           <div className="max-w-md mx-auto">
             <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <img src="/logo.png" alt="MentorCircle Logo" className="h-10 w-auto" />
+                <span className="text-xl font-bold text-darkblue">MentorCircle</span>
+              </div>
               <h2 className="text-3xl font-bold text-navy">Login</h2>
               <p className="text-textsecondary mt-2 text-sm">
                 Welcome back! Please enter your details.

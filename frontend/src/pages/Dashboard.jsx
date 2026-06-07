@@ -97,7 +97,7 @@ const Dashboard = () => {
                     key={item.id || idx}
                     className="rounded-2xl bg-appbg p-4 border border-borderline"
                   >
-                    {item.title || item.name || item.description || JSON.stringify(item)}
+                    {item.title || item.name || item.description || "Untitled item"}
                   </li>
                 ))}
               </ul>
@@ -131,7 +131,7 @@ const Dashboard = () => {
                     key={item.id || idx}
                     className="rounded-2xl bg-appbg p-4 border border-borderline"
                   >
-                    {item.title || item.name || item.description || JSON.stringify(item)}
+                    {item.title || item.name || item.description || "Untitled item"}
                   </li>
                 ))}
               </ul>
@@ -165,7 +165,7 @@ const Dashboard = () => {
                     key={item.id || idx}
                     className="rounded-2xl bg-appbg p-4 border border-borderline"
                   >
-                    {item.title || item.name || item.description || JSON.stringify(item)}
+                    {item.title || item.name || item.description || "Untitled item"}
                   </li>
                 ))}
               </ul>
@@ -199,7 +199,7 @@ const Dashboard = () => {
                     key={item.id || idx}
                     className="rounded-2xl bg-appbg p-4 border border-borderline"
                   >
-                    {item.title || item.name || item.description || JSON.stringify(item)}
+                    {item.title || item.name || item.description || "Untitled item"}
                   </li>
                 ))}
               </ul>

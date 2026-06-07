@@ -40,9 +40,7 @@ const Sidebar = () => {
       {/* Branding Section */}
       <div className="px-6 py-8">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 bg-gradient-to-br from-royal to-darkblue rounded-xl flex items-center justify-center">
-            <BrainCircuit className="w-6 h-6 text-white" />
-          </div>
+          <img src="/logo.png" alt="MentorCircle Logo" className="w-11 h-11 object-contain" />
           <div>
             <h2 className="text-xl font-bold text-navy">MentorCircle</h2>
             <p className="text-xs text-textsecondary">AI Learning Platform</p>
@@ -113,9 +111,7 @@ const Sidebar = () => {
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-borderline p-4 flex items-center justify-between shadow-soft">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-royal to-darkblue rounded-lg flex items-center justify-center">
-            <BrainCircuit className="w-5 h-5 text-white" />
-          </div>
+          <img src="/logo.png" alt="MentorCircle Logo" className="w-9 h-9 object-contain" />
           <span className="font-bold text-navy">MentorCircle</span>
         </div>
         <button

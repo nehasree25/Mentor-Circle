@@ -1,8 +1,16 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Circle, JoinRequest, Discussion
+from .models import Circle, JoinRequest
+from discussions.models import Discussion
 from users.models import UserProfile
 from users.serializers import UserProfileSerializer
+
+
+class CircleSimpleSerializer(serializers.ModelSerializer):
+    """Simple serializer for circle data in peer profiles."""
+    class Meta:
+        model = Circle
+        fields = ("id", "name", "domain", "skill_level")
 
 
 # ============================================================================
@@ -171,12 +179,12 @@ class CircleListSerializer(serializers.ModelSerializer):
         )
     
     def get_member_count(self, obj):
-        """Get number of current members."""
-        return obj.get_member_count()
+        """Get number of current members from annotated field."""
+        return obj.member_count
     
     def get_mentor_count(self, obj):
-        """Get number of current mentors."""
-        return obj.get_mentor_count()
+        """Get number of current mentors from annotated field."""
+        return obj.mentor_count
     
     def get_peer_count(self, obj):
         """Get number of peers (non-mentor members)."""
@@ -232,8 +240,8 @@ class CircleDetailSerializer(serializers.ModelSerializer):
     """
     
     creator = UserBasicSerializer(source='created_by', read_only=True)
-    members_list = UserBasicSerializer(source='members', many=True, read_only=True)
-    mentors_list = UserBasicSerializer(source='mentors', many=True, read_only=True)
+    members_list = serializers.SerializerMethodField()
+    mentors_list = serializers.SerializerMethodField()
     peers_list = serializers.SerializerMethodField()
     member_count = serializers.SerializerMethodField()
     mentor_count = serializers.SerializerMethodField()
@@ -264,10 +272,30 @@ class CircleDetailSerializer(serializers.ModelSerializer):
             'is_mentor', 'is_creator', 'pending_request', 'is_active', 'is_deleted'
         )
     
+    def get_members_list(self, obj):
+        """Get list of members only if user is part of the circle."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            if obj.is_member(request.user) or obj.is_mentor(request.user) or obj.is_creator(request.user):
+                return UserBasicSerializer(obj.members.all(), many=True, context=self.context).data
+        return []
+    
+    def get_mentors_list(self, obj):
+        """Get list of mentors only if user is part of the circle."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            if obj.is_member(request.user) or obj.is_mentor(request.user) or obj.is_creator(request.user):
+                return UserBasicSerializer(obj.mentors.all(), many=True, context=self.context).data
+        return []
+    
     def get_peers_list(self, obj):
-        """Get list of peers (non-mentor, non-creator members)."""
-        peers = obj.get_peers()
-        return UserBasicSerializer(peers, many=True, context=self.context).data
+        """Get list of peers (non-mentor, non-creator members) only if user is part of the circle."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            if obj.is_member(request.user) or obj.is_mentor(request.user) or obj.is_creator(request.user):
+                peers = obj.get_peers()
+                return UserBasicSerializer(peers, many=True, context=self.context).data
+        return []
     
     def get_member_count(self, obj):
         """Get number of current members."""

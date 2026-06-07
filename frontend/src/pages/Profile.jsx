@@ -13,6 +13,7 @@ import {
 import { authService } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "../components/common/Avatar";
+import { API_BASE_URL } from "../api/axios";
 
 const Profile = () => {
   const { user: authUser, setSession, updateProfile } = useAuth();
@@ -34,6 +35,7 @@ const Profile = () => {
   const [profileData, setProfileData] = useState({
     role: "student",
     bio: "",
+    domain: "",
     interests: "",
     experience_level: "beginner",
     skills: "",
@@ -43,6 +45,8 @@ const Profile = () => {
     is_mentor: false,
     profile_picture: null,
   });
+  
+  const [domainChoices, setDomainChoices] = useState([]);
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -54,17 +58,37 @@ const Profile = () => {
       setUserData(userRes);
       setProfileData({
         ...profileRes,
+        domain: profileRes.domain || "",
         years_of_experience: profileRes.years_of_experience?.toString() || "",
       });
+      
+      // Set domain choices with defaults if not available from backend
+      const defaultDomainChoices = [
+        { value: "math", label: "Mathematics" },
+        { value: "physics", label: "Physics" },
+        { value: "chemistry", label: "Chemistry" },
+        { value: "biology", label: "Biology" },
+        { value: "cs", label: "Computer Science" },
+        { value: "engineering", label: "Engineering" },
+        { value: "other", label: "Other STEM" },
+      ];
+      
+      if (profileRes.domain_choices) {
+        setDomainChoices(profileRes.domain_choices);
+      } else {
+        setDomainChoices(defaultDomainChoices);
+      }
+      
       const getPreviewUrl = (pic) => {
         if (!pic) return null;
         if (pic.startsWith("http://") || pic.startsWith("https://")) {
           return pic;
         }
+        const baseMediaUrl = API_BASE_URL.replace(/\/api$/, "");
         if (pic.startsWith("/")) {
-          return `http://127.0.0.1:8000${pic}`;
+          return `${baseMediaUrl}${pic}`;
         }
-        return `http://127.0.0.1:8000/media/${pic}`;
+        return `${baseMediaUrl}/media/${pic}`;
       };
       if (profileRes.profile_picture) {
         setImagePreview(getPreviewUrl(profileRes.profile_picture));
@@ -333,6 +357,128 @@ const Profile = () => {
                 )}
               </div>
 
+              {/* Domain */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-textsecondary">Domain</label>
+                {editing ? (
+                  <select
+                    value={profileData.domain || ""}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, domain: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-borderline px-4 py-3 focus:border-royal focus:ring-2 focus:ring-softblue outline-none bg-white max-w-md"
+                  >
+                    <option value="">Select a domain...</option>
+                    {domainChoices.map((choice) => (
+                      <option key={choice.value} value={choice.value}>
+                        {choice.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {profileData.domain ? (
+                      <span className="rounded-full bg-purple-100 px-4 py-2 text-sm font-semibold text-purple-700">
+                        {domainChoices.find(d => d.value === profileData.domain)?.label || profileData.domain}
+                      </span>
+                    ) : (
+                      <p className="text-textsecondary">No domain selected yet.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Interests */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-textsecondary">
+                  Interests (comma separated)
+                </label>
+                {editing ? (
+                  <input
+                    type="text"
+                    value={profileData.interests}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, interests: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-borderline px-4 py-3 focus:border-royal focus:ring-2 focus:ring-softblue outline-none"
+                    placeholder="Machine Learning, Web Development, Data Science..."
+                  />
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {tagList(profileData.interests).length > 0 ? (
+                      tagList(profileData.interests).map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-softblue px-3 py-1.5 text-sm font-medium text-royal"
+                        >
+                          {tag}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-textsecondary">No interests listed yet.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Skills */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-textsecondary">
+                  Skills (comma separated)
+                </label>
+                {editing ? (
+                  <input
+                    type="text"
+                    value={profileData.skills}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, skills: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-borderline px-4 py-3 focus:border-royal focus:ring-2 focus:ring-softblue outline-none"
+                    placeholder="React, Python, JavaScript, TensorFlow..."
+                  />
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {tagList(profileData.skills).length > 0 ? (
+                      tagList(profileData.skills).map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-green-100 px-3 py-1.5 text-sm font-semibold text-green-700"
+                        >
+                          {tag}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-textsecondary">No skills listed yet.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Learning Goals */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-textsecondary">
+                  Learning Goals
+                </label>
+                {editing ? (
+                  <textarea
+                    value={profileData.learning_goals}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        learning_goals: e.target.value,
+                      })
+                    }
+                    rows={2}
+                    className="w-full rounded-xl border border-borderline px-4 py-3 focus:border-royal focus:ring-2 focus:ring-softblue outline-none resize-none"
+                    placeholder="What do you want to learn?"
+                  />
+                ) : (
+                  <p className="text-navy">
+                    {profileData.learning_goals || "No goals set yet."}
+                  </p>
+                )}
+              </div>
+
               {/* Role */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-textsecondary">Role</label>
@@ -380,94 +526,34 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Conditional Fields - Student */}
-              {profileData.role === "student" && (
-                <>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-textsecondary">
-                      Interests (comma separated)
-                    </label>
-                    {editing ? (
-                      <input
-                        type="text"
-                        value={profileData.interests}
-                        onChange={(e) =>
-                          setProfileData({ ...profileData, interests: e.target.value })
-                        }
-                        className="w-full rounded-xl border border-borderline px-4 py-3 focus:border-royal focus:ring-2 focus:ring-softblue outline-none"
-                        placeholder="Web Development, Machine Learning, Data Science..."
-                      />
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {tagList(profileData.interests).length > 0 ? (
-                          tagList(profileData.interests).map((tag, idx) => (
-                            <span
-                              key={idx}
-                              className="rounded-full bg-softblue px-3 py-1 text-xs font-medium text-royal"
-                            >
-                              {tag}
-                            </span>
-                          ))
-                        ) : (
-                          <p className="text-textsecondary">No interests listed yet.</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
+              {/* Experience Level */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-textsecondary">
+                  Experience Level
+                </label>
+                {editing ? (
+                  <select
+                    value={profileData.experience_level}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        experience_level: e.target.value,
+                      })
+                    }
+                    className="w-full rounded-xl border border-borderline px-4 py-3 focus:border-royal focus:ring-2 focus:ring-softblue outline-none bg-white max-w-xs"
+                  >
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                ) : (
+                  <p className="text-navy font-medium capitalize">
+                    {profileData.experience_level}
+                  </p>
+                )}
+              </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-textsecondary">
-                      Experience Level
-                    </label>
-                    {editing ? (
-                      <select
-                        value={profileData.experience_level}
-                        onChange={(e) =>
-                          setProfileData({
-                            ...profileData,
-                            experience_level: e.target.value,
-                          })
-                        }
-                        className="w-full rounded-xl border border-borderline px-4 py-3 focus:border-royal focus:ring-2 focus:ring-softblue outline-none bg-white max-w-xs"
-                      >
-                        <option value="beginner">Beginner</option>
-                        <option value="intermediate">Intermediate</option>
-                        <option value="advanced">Advanced</option>
-                      </select>
-                    ) : (
-                      <p className="text-navy font-medium capitalize">
-                        {profileData.experience_level}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-textsecondary">
-                      Learning Goals
-                    </label>
-                    {editing ? (
-                      <textarea
-                        value={profileData.learning_goals}
-                        onChange={(e) =>
-                          setProfileData({
-                            ...profileData,
-                            learning_goals: e.target.value,
-                          })
-                        }
-                        rows={2}
-                        className="w-full rounded-xl border border-borderline px-4 py-3 focus:border-royal focus:ring-2 focus:ring-softblue outline-none resize-none"
-                        placeholder="What do you want to learn?"
-                      />
-                    ) : (
-                      <p className="text-navy">
-                        {profileData.learning_goals || "No goals set yet."}
-                      </p>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* Conditional Fields - Mentor */}
+              {/* Conditional Mentor Fields */}
               {profileData.role === "mentor" && (
                 <>
                   <div className="space-y-2">
@@ -521,39 +607,6 @@ const Profile = () => {
                   </div>
                 </>
               )}
-
-              {/* Skills (for both roles) */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-textsecondary">
-                  Skills (comma separated)
-                </label>
-                {editing ? (
-                  <input
-                    type="text"
-                    value={profileData.skills}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, skills: e.target.value })
-                    }
-                    className="w-full rounded-xl border border-borderline px-4 py-3 focus:border-royal focus:ring-2 focus:ring-softblue outline-none"
-                    placeholder="React, Python, JavaScript..."
-                  />
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {tagList(profileData.skills).length > 0 ? (
-                      tagList(profileData.skills).map((tag, idx) => (
-                        <span
-                          key={idx}
-                          className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700"
-                        >
-                          {tag}
-                        </span>
-                      ))
-                    ) : (
-                      <p className="text-textsecondary">No skills listed yet.</p>
-                    )}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>

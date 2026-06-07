@@ -13,6 +13,25 @@ from users.serializers import UserDetailSerializer
 
 
 # ============================================================================
+# Mentors Stats View
+# ============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def mentor_stats(request):
+    """Return aggregate stats for the mentors page."""
+    mentors_qs = User.objects.filter(profile__is_mentor=True, profile__role='mentor')
+    total = mentors_qs.count()
+    available = mentors_qs.filter(profile__availability='available').count()
+    domains = mentors_qs.exclude(profile__domain__isnull=True).exclude(profile__domain='').values_list('profile__domain', flat=True).distinct().count()
+    return Response({
+        "total_mentors": total,
+        "available_mentors": available,
+        "domains_covered": domains,
+    })
+
+
+# ============================================================================
 # Mentors List View - Get all mentors
 # ============================================================================
 
@@ -56,6 +75,24 @@ def mentor_list(request):
         mentors_qs = mentors_qs.filter(
             profile__mentorship_expertise__icontains=expertise
         )
+
+    # Domain filter
+    domain = request.query_params.get('domain', '')
+    if domain:
+        mentors_qs = mentors_qs.filter(profile__domain=domain)
+
+    # Availability filter
+    availability = request.query_params.get('availability', '')
+    if availability:
+        mentors_qs = mentors_qs.filter(profile__availability=availability)
+
+    # Experience filter
+    experience = request.query_params.get('experience', '')
+    if experience:
+        try:
+            mentors_qs = mentors_qs.filter(profile__years_of_experience__gte=int(experience))
+        except ValueError:
+            pass
     
     # Pagination
     paginator = PageNumberPagination()

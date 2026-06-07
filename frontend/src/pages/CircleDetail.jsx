@@ -186,7 +186,7 @@ const CircleDetail = () => {
       
       const interval = setInterval(() => {
         fetchDiscussions();
-      }, 2500); // Poll every 2.5 seconds
+      }, 30000); // Poll every 30 seconds
       setPollingInterval(interval);
 
       return () => clearInterval(interval); // Cleanup on unmount

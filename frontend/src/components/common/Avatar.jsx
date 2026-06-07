@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "../../api/axios";
+
 export default function Avatar({ user, size = "w-16 h-16" }) {
   const initials = user?.first_name?.[0]?.toUpperCase() || user?.username?.[0]?.toUpperCase() || "?";
   const profilePicture = user?.profile?.profile_picture;
@@ -13,10 +15,11 @@ export default function Avatar({ user, size = "w-16 h-16" }) {
     if (pic.startsWith("http://") || pic.startsWith("https://")) {
       return pic;
     }
+    const baseMediaUrl = API_BASE_URL.replace(/\/api$/, "");
     if (pic.startsWith("/")) {
-      return `http://127.0.0.1:8000${pic}`;
+      return `${baseMediaUrl}${pic}`;
     }
-    return `http://127.0.0.1:8000/media/${pic}`;
+    return `${baseMediaUrl}/media/${pic}`;
   };
 
   const imageSrc = getImageSrc(profilePicture);

@@ -168,10 +168,7 @@ def profile(request):
         
         if user_serializer.is_valid():
             user_serializer.save()
-            return Response({
-                'message': 'Profile updated successfully!',
-                'user': user_serializer.data
-            }, status=status.HTTP_200_OK)
+            return Response(user_serializer.data, status=status.HTTP_200_OK)
         
         return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -213,10 +210,7 @@ def userprofile(request):
         
         if serializer.is_valid():
             serializer.save()
-            return Response({
-                'message': 'UserProfile updated successfully!',
-                'profile': serializer.data
-            }, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -398,7 +392,8 @@ def user_list(request):
 def profile_stats(request):
     """Get user's profile stats"""
     try:
-        from circles.models import Circle, Discussion
+        from circles.models import Circle
+        from discussions.models import Discussion
 
         user = request.user
 
@@ -475,19 +470,20 @@ def dashboard(request):
         # Ensure UserProfile exists
         UserProfile.objects.get_or_create(user=user)
         
-        # Get user's circles (active, non-deleted only)
+        # Get user's circles (active, non-deleted only, with members count annotated to avoid N+1)
+        from django.db.models import Count
         joined_circles_queryset = Circle.objects.filter(
             members=user,
             is_active=True,
             is_deleted=False
-        )[:5]
+        ).annotate(members_count=Count('members'))[:5]
         joined_circles = []
         for circle in joined_circles_queryset:
             joined_circles.append({
                 'id': circle.id,
                 'name': circle.name,
                 'description': circle.description,
-                'members_count': circle.members.count(),
+                'members_count': circle.members_count,
                 'created_at': circle.created_at,
             })
         
@@ -523,18 +519,8 @@ def dashboard(request):
             {
                 'error': 'An unexpected error occurred while fetching dashboard data',
                 'details': str(e),
-                'user': {
-                    'id': request.user.id,
-                    'username': request.user.username,
-                },
-                'joined_circles': [],
-                'pending_requests': 0,
-                'mentor_sessions': [],
-                'recommendations': [],
-                'learning_progress': [],
-                'discussion_activity': [],
             },
-            status=status.HTTP_200_OK  # Return 200 even with error, just with fallback data
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 

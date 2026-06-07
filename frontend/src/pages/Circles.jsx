@@ -273,10 +273,10 @@ const Circles = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate(`/circles/${circle.id}`)}
-                className="flex-1 rounded-xl border border-borderline px-4 py-2 font-semibold text-navy hover:bg-appbg transition-all"
+                className="rounded-xl border border-borderline px-4 py-2 text-sm font-semibold text-navy hover:bg-appbg transition-all whitespace-nowrap"
               >
                 View Details
               </button>
@@ -284,16 +284,17 @@ const Circles = () => {
                 <button
                   onClick={() => handleJoinCircle(circle.id, circle.is_private)}
                   disabled={circle.is_full}
-                  className="flex-1 rounded-xl bg-royal px-4 py-2 font-semibold text-white hover:bg-darkblue transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-xl bg-royal px-4 py-2 text-sm font-semibold text-white hover:bg-darkblue transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   {circle.is_private ? "Request to Join" : "Join Circle"}
                 </button>
-              ) : null}
-              <div className="flex-1 flex items-center justify-center text-sm font-semibold text-navy">
-                {circle.is_creator && "Creator"}
-                {circle.is_member && !circle.is_creator && "Member"}
-                {circle.pending_request && "Pending"}
-              </div>
+              ) : (
+                <span className="px-4 py-2 text-sm font-semibold text-navy">
+                  {circle.is_creator && "Creator"}
+                  {circle.is_member && !circle.is_creator && "Member"}
+                  {circle.pending_request && "Pending"}
+                </span>
+              )}
             </div>
           </motion.div>
         ))}

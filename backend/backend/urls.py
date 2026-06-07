@@ -22,11 +22,12 @@ urlpatterns = [
     
     # API endpoints
     path("api/", include("users.urls")),
+    path("api/", include("peers.urls")),
     path("api/circles/", include("circles.urls")),
     path("api/mentors/", include("mentors.urls")),
 ]
 
-# Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
+urlpatterns += static(
+    settings.MEDIA_URL,
+    document_root=settings.MEDIA_ROOT
+)

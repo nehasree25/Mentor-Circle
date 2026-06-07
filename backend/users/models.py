@@ -15,6 +15,7 @@ class UserProfile(models.Model):
     Only mentor-role users can be assigned as mentors in circles.
     """
     
+
     ROLE_CHOICES = (
         ('student', 'Student'),
         ('mentor', 'Mentor'),
@@ -46,15 +47,64 @@ class UserProfile(models.Model):
         db_index=True,
         help_text="User role determines circle participation level"
     )
+
+
+    domain = models.CharField(
+        max_length=50,
+        choices=INTEREST_CHOICES,
+        null=True,
+        blank=True,
+
+        help_text="Primary STEM domain of focus"
+    )
+
+
+
+
+
+
     interests = models.CharField(
         max_length=200,
         blank=True,
-        help_text="Comma-separated STEM interests"
+        help_text="Comma-separated STEM interests (multiple topics)"
     )
+
+
+
+
+
+
+
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     # Experience and skills
     experience_level = models.CharField(
         max_length=20,
+
+
+
         choices=[('beginner', 'Beginner'), ('intermediate', 'Intermediate'), ('advanced', 'Advanced')],
         default='beginner'
     )
@@ -69,14 +119,31 @@ class UserProfile(models.Model):
     # Mentorship details
     is_mentor = models.BooleanField(default=False)
     mentorship_expertise = models.TextField(blank=True, help_text="Mentor expertise areas")
-    
+
     # Learning goals
     learning_goals = models.TextField(blank=True, help_text="Personal learning objectives")
-    
+
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
+    # Peer Profile Fields (merged from peers app)
+    AVAILABILITY_CHOICES = (
+        ("available", "Available"),
+        ("busy", "Busy"),
+        ("away", "Away"),
+        ("offline", "Offline"),
+    )
+
+    github = models.URLField(blank=True)
+    linkedin = models.URLField(blank=True)
+    availability = models.CharField(
+        max_length=20,
+        choices=AVAILABILITY_CHOICES,
+        default="available",
+        db_index=True
+    )
+
     class Meta:
         verbose_name = 'User Profile'
         verbose_name_plural = 'User Profiles'
@@ -84,3 +151,4 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return f"{self.user.get_full_name() or self.user.username} - {self.role}"
+

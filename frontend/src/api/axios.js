@@ -2,7 +2,7 @@
 import toast from "react-hot-toast";
 
 // Backend Base URL
-const API_BASE_URL =
+export const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 const axiosInstance = axios.create({
@@ -34,6 +34,42 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Normalize error message for consistent handling
+    if (!error.normalized) {
+      let errorMessage = "An unexpected error occurred";
+      
+      if (error.response?.data) {
+        // Check for common error message keys
+        const data = error.response.data;
+        if (typeof data === "string") {
+          errorMessage = data;
+        } else if (data.detail) {
+          errorMessage = data.detail;
+        } else if (data.error) {
+          errorMessage = data.error;
+        } else if (data.message) {
+          errorMessage = data.message;
+        } else if (Object.keys(data).length > 0) {
+          // If it's a dict of field errors, join them
+          errorMessage = Object.entries(data)
+            .map(([field, messages]) => {
+              const msgArray = Array.isArray(messages) ? messages : [messages];
+              return `${field}: ${msgArray.join(", ")}`;
+            })
+            .join("; ");
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // Attach normalized error for easy access
+      error.normalized = {
+        message: errorMessage,
+        status: error.response?.status,
+        data: error.response?.data,
+      };
+    }
+
     // Skip refresh for auth routes
     const isAuthRoute =
       originalRequest?.url?.includes("auth/login") ||
@@ -57,7 +93,7 @@ axiosInstance.interceptors.response.use(
 
         // Refresh token
         const response = await axios.post(
-          `${API_BASE_URL}/auth/token/refresh/`,
+          `${API_BASE_URL}/auth/refresh/`,
           {
             refresh: refreshToken,
           }

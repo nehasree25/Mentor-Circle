@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "mentors.apps.MentorsConfig",
     "discussions.apps.DiscussionsConfig",
     "ai_engine.apps.AiEngineConfig",
+    "peers.apps.PeersConfig",
 ]
 
 MIDDLEWARE = [

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -218,24 +219,29 @@ class Circle(models.Model):
     def can_add_mentor(self, user):
         """
         Check if a user can be added as a mentor.
-        
+
         Returns: (can_add: bool, reason: str or None)
-        
+
         Validation rules:
+        - User must have a mentor role
         - Maximum 5 mentors
         - User is not already a mentor
         - User exists
         """
+        # SECURITY: Verify user has mentor role
+        if not hasattr(user, 'profile') or user.profile.role != 'mentor':
+            return False, "User must have a mentor role to be added as a mentor."
+
         mentor_count = self.mentors.count()
-        
+
         # Check mentor limit
         if mentor_count >= 5:
             return False, "Circle has reached maximum mentors (5)."
-        
+
         # Check if already a mentor
         if self.mentors.filter(id=user.id).exists():
             return False, "User is already a mentor in this circle."
-        
+
         return True, None
     
     def add_member_safe(self, user):
@@ -325,23 +331,17 @@ class Circle(models.Model):
         # Add old owner to members if they're not already there
         if not self.members.filter(id=self.created_by.id).exists():
             self.members.add(self.created_by)
-        # Remove new owner from members/mentors and set as creator
-        self.members.remove(new_owner)
-        self.mentors.remove(new_owner)
+
         self.created_by = new_owner
         self.save()
     
     def get_peers(self):
         """Get non-mentor members (including creator if not a mentor)."""
-        mentor_ids = self.mentors.values_list('id', flat=True)
-        # Start with all members
-        peers = list(self.members.exclude(id__in=mentor_ids))
-        # Add creator if not in mentor_ids and not already in list
-        if self.created_by.id not in mentor_ids:
-            if not any(p.id == self.created_by.id for p in peers):
-                peers.append(self.created_by)
-        # Return distinct user list with profile
-        return User.objects.filter(id__in=[p.id for p in peers]).select_related('profile')
+        # A peer is someone who is (a member OR the creator) AND NOT a mentor
+        return User.objects.filter(
+            (Q(joined_circles=self) | Q(created_circles=self)) &
+            ~Q(mentoring_circles=self)
+        ).select_related('profile').distinct()
     
     def get_peer_count(self):
         """Get the number of peers (non-mentor members, including creator)."""
@@ -410,9 +410,9 @@ class JoinRequest(models.Model):
         verbose_name = 'Join Request'
         verbose_name_plural = 'Join Requests'
         ordering = ['-created_at']
-        # Prevent duplicate pending requests
+        # Prevent duplicate requests (one per user per circle, regardless of status)
         unique_together = [
-            ('user', 'circle', 'status')
+            ('user', 'circle')
         ]
         indexes = [
             models.Index(fields=['user', 'circle']),
@@ -428,26 +428,30 @@ class JoinRequest(models.Model):
         - Updates status to 'accepted'
         - Adds user to circle members
         - Auto-adds as mentor if user is a registered mentor
-        
+
         Returns: (success: bool, message: str)
         """
         try:
+            # First, check if the user can actually join (e.g. capacity check)
+            can_add, reason = self.circle.can_add_member(self.user)
+            if not can_add:
+                # Return error without marking as rejected (keep as pending)
+                return False, reason
+
+            # Update status and save
             self.status = 'accepted'
             self.save()
-            
+
             # Add user to circle members
-            can_add, reason = self.circle.can_add_member(self.user)
-            if can_add:
-                self.circle.members.add(self.user)
-                # Auto-add as mentor if user is a registered mentor
-                if hasattr(self.user, 'profile') and self.user.profile.role == 'mentor':
+            self.circle.members.add(self.user)
+
+            # Auto-add as mentor if user is a registered mentor and circle has space
+            if hasattr(self.user, 'profile') and self.user.profile.role == 'mentor':
+                can_add_mentor, reason = self.circle.can_add_mentor(self.user)
+                if can_add_mentor:
                     self.circle.mentors.add(self.user)
-                return True, "Request approved and user added to circle"
-            else:
-                # Revert status if can't add member
-                self.status = 'rejected'
-                self.save()
-                return False, reason
+
+            return True, "Request approved and user added to circle"
         except Exception as e:
             return False, f"Error approving request: {str(e)}"
     
@@ -467,95 +471,4 @@ class JoinRequest(models.Model):
             return False, f"Error rejecting request: {str(e)}"
 
 
-class Discussion(models.Model):
-    """
-    Discussion Model - Handles messages within a circle.
-    
-    WORKFLOW:
-    1. Users send messages in a circle
-    2. Messages are organized by category
-    3. Mentors and students can discuss STEM topics
-    
-    SECURITY:
-    - Only circle members/mentors/creator can send messages
-    - Soft delete support
-    """
-    
-    CATEGORY_CHOICES = (
-        ('general', 'General'),
-        ('doubts', 'Doubts'),
-        ('announcements', 'Announcements'),
-        ('resources', 'Resources'),
-        ('projects', 'Projects'),
-    )
-    
-    # Relationships
-    circle = models.ForeignKey(
-        Circle,
-        on_delete=models.CASCADE,
-        related_name='discussions',
-        help_text="Circle this discussion belongs to"
-    )
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='discussions',
-        help_text="User who sent the message"
-    )
-    
-    # Message content
-    content = models.TextField(
-        max_length=2000,
-        help_text="Discussion message content"
-    )
-    
-    # Category
-    category = models.CharField(
-        max_length=30,
-        choices=CATEGORY_CHOICES,
-        default='general',
-        db_index=True,
-        help_text="Discussion category"
-    )
-    
-    # Soft delete fields
-    is_active = models.BooleanField(
-        default=True,
-        db_index=True,
-        help_text="Whether the discussion is active"
-    )
-    is_deleted = models.BooleanField(
-        default=False,
-        db_index=True,
-        help_text="Whether the discussion is soft deleted"
-    )
-    
-    # Timestamps
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        db_index=True,
-        help_text="When the message was sent"
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        help_text="When the message was last updated"
-    )
-    
-    class Meta:
-        verbose_name = 'Discussion'
-        verbose_name_plural = 'Discussions'
-        ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['circle', 'category', '-created_at']),
-            models.Index(fields=['is_active', 'is_deleted']),
-        ]
-    
-    def __str__(self):
-        return f"{self.user.username} in {self.circle.name} ({self.category})"
-    
-    def soft_delete(self):
-        """Soft delete the discussion message"""
-        self.is_active = False
-        self.is_deleted = True
-        self.save()
 

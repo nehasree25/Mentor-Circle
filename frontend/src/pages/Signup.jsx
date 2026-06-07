@@ -1,8 +1,19 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { authService } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
+
+// Domain options — matches backend UserProfile.INTEREST_CHOICES
+const DOMAIN_OPTIONS = [
+  { value: "math", label: "Mathematics" },
+  { value: "physics", label: "Physics" },
+  { value: "chemistry", label: "Chemistry" },
+  { value: "biology", label: "Biology" },
+  { value: "cs", label: "Computer Science" },
+  { value: "engineering", label: "Engineering" },
+  { value: "other", label: "Other STEM" },
+];
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -20,8 +31,11 @@ const Signup = () => {
     password2: "",
     role: "student",
 
-    // Student
+    // Common
+    domain: "",
     interests: "",
+
+    // Student
     experience_level: "beginner",
     skills: "",
     learning_goals: "",
@@ -105,6 +119,7 @@ const Signup = () => {
       if (form.role === "student") {
         payload = {
           ...payload,
+          domain: form.domain,
           interests: form.interests,
           experience_level: form.experience_level,
           skills: form.skills,
@@ -117,14 +132,14 @@ const Signup = () => {
         payload = {
           ...payload,
           is_mentor: true,
-          mentorship_expertise:
-            form.mentorship_expertise,
+          domain: form.domain,
+          interests: form.interests,
+          mentorship_expertise: form.mentorship_expertise,
           skills: form.skills,
           bio: form.bio,
-          years_of_experience:
-            form.years_of_experience
-              ? parseInt(form.years_of_experience)
-              : 0,
+          years_of_experience: form.years_of_experience
+            ? parseInt(form.years_of_experience)
+            : 0,
         };
       }
 
@@ -192,7 +207,7 @@ const Signup = () => {
           {/* LEFT SIDE */}
           <section className="hidden md:flex flex-col justify-between bg-navy p-12 text-white">
 
-            <div className="space-y-8">
+            <div className="space-y-6">
               <h1 className="text-5xl font-bold leading-tight">
                 Join the Future
                 <br />
@@ -223,6 +238,10 @@ const Signup = () => {
             <div className="max-w-md mx-auto">
 
               <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <img src="/logo.png" alt="MentorCircle Logo" className="h-10 w-auto" />
+                  <span className="text-xl font-bold text-darkblue">MentorCircle</span>
+                </div>
                 <h2 className="text-3xl font-bold text-navy">
                   Create Account
                 </h2>
@@ -425,13 +444,30 @@ const Signup = () => {
                   </div>
                 </div>
 
+                {/* Domain — shared for both student and mentor */}
+                <div>
+                  <label className="text-sm font-semibold text-navy block mb-1">Domain</label>
+                  <select
+                    name="domain"
+                    value={form.domain}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-borderline px-5 py-3.5 outline-none focus:border-royal focus:ring-4 focus:ring-softblue"
+                  >
+                    <option value="">Select Domain</option>
+                    {DOMAIN_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* STUDENT */}
                 {form.role === "student" && (
                   <>
+
                     <input
                       type="text"
                       name="interests"
-                      placeholder="Interests"
+                      placeholder="Interests (e.g. Machine Learning, DSA)"
                       value={form.interests}
                       onChange={handleChange}
                       className="w-full rounded-xl border border-borderline px-5 py-3.5"
@@ -443,23 +479,15 @@ const Signup = () => {
                       onChange={handleChange}
                       className="w-full rounded-xl border border-borderline px-5 py-3.5"
                     >
-                      <option value="beginner">
-                        Beginner
-                      </option>
-
-                      <option value="intermediate">
-                        Intermediate
-                      </option>
-
-                      <option value="advanced">
-                        Advanced
-                      </option>
+                      <option value="beginner">Beginner</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
                     </select>
 
                     <input
                       type="text"
                       name="skills"
-                      placeholder="Skills"
+                      placeholder="Skills (e.g. Python, React)"
                       value={form.skills}
                       onChange={handleChange}
                       className="w-full rounded-xl border border-borderline px-5 py-3.5"
@@ -481,6 +509,15 @@ const Signup = () => {
                   <>
                     <input
                       type="text"
+                      name="interests"
+                      placeholder="Interests (e.g. AI, Deep Learning)"
+                      value={form.interests}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-borderline px-5 py-3.5"
+                    />
+
+                    <input
+                      type="text"
                       name="mentorship_expertise"
                       placeholder="Mentorship Expertise"
                       value={form.mentorship_expertise}
@@ -491,7 +528,7 @@ const Signup = () => {
                     <input
                       type="text"
                       name="skills"
-                      placeholder="Skills"
+                      placeholder="Skills (e.g. Python, TensorFlow)"
                       value={form.skills}
                       onChange={handleChange}
                       className="w-full rounded-xl border border-borderline px-5 py-3.5"
