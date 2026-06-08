@@ -450,12 +450,12 @@ def profile_stats(request):
 @permission_classes([IsAuthenticated])
 def dashboard(request):
     """
-    Get user's dashboard data including:
-    - Joined circles
-    - Mentor sessions
-    - Recommendations
-    - Learning progress
-    - Discussion activity
+    Get user's dashboard data using ONLY REAL BACKEND DATA:
+    - Joined circles (active, non-deleted)
+    - Available mentors (up to 3, from /mentors/ endpoint)
+    - Shared peers (up to 5, from /peers/ endpoint)
+    - Recent activity (latest from circles/discussions)
+    - All stats from actual database queries
     
     Requires JWT authentication.
     """
@@ -464,36 +464,116 @@ def dashboard(request):
     
     try:
         from circles.models import Circle, JoinRequest
+        from discussions.models import Discussion
+        from django.contrib.auth.models import User
+        from django.db.models import Count, Q, F
+        from users.serializers import UserDetailSerializer
         
         user = request.user
         
         # Ensure UserProfile exists
         UserProfile.objects.get_or_create(user=user)
         
-        # Get user's circles (active, non-deleted only, with members count annotated to avoid N+1)
-        from django.db.models import Count
-        joined_circles_queryset = Circle.objects.filter(
+        # =========================================================
+        # 1. JOINED CIRCLES - Real backend data only
+        # =========================================================
+        joined_circles_qs = Circle.objects.filter(
             members=user,
             is_active=True,
             is_deleted=False
-        ).annotate(members_count=Count('members'))[:5]
+        ).annotate(
+            members_count=Count('members', distinct=True),
+            discussion_count=Count('discussions', distinct=True)
+        )[:10]
+        
         joined_circles = []
-        for circle in joined_circles_queryset:
+        for circle in joined_circles_qs:
             joined_circles.append({
                 'id': circle.id,
                 'name': circle.name,
                 'description': circle.description,
                 'members_count': circle.members_count,
+                'discussion_count': circle.discussion_count,
                 'created_at': circle.created_at,
             })
         
-        # Get pending join requests
+        # =========================================================
+        # 2. AVAILABLE MENTORS - Real mentors from database (max 3)
+        # =========================================================
+        available_mentors_qs = User.objects.filter(
+            profile__is_mentor=True,
+            profile__role='mentor'
+        ).exclude(id=user.id).select_related('profile').prefetch_related('joined_circles')[:3]
+        
+        available_mentors = UserDetailSerializer(available_mentors_qs, many=True).data
+        
+        # =========================================================
+        # 3. SHARED PEERS - Real peers from database (max 5)
+        # =========================================================
+        # Get circles the user belongs to
+        user_circles = Circle.objects.filter(
+            Q(members=user) | Q(created_by=user),
+            is_active=True,
+            is_deleted=False
+        ).values_list('id', flat=True)
+        
+        # Get peers who share at least one circle (exclude mentors, exclude self)
+        shared_peers_qs = User.objects.filter(
+            Q(joined_circles__id__in=user_circles) | Q(created_circles__id__in=user_circles)
+        ).exclude(
+            id=user.id
+        ).exclude(
+            profile__role='mentor'
+        ).select_related('profile').annotate(
+            shared_circles_count=Count(
+                'joined_circles',
+                filter=Q(joined_circles__id__in=user_circles),
+                distinct=True
+            )
+        ).distinct()[:5]
+        
+        shared_peers = UserDetailSerializer(shared_peers_qs, many=True).data
+        
+        # =========================================================
+        # 4. RECENT ACTIVITY - Real discussions from joined circles (max 4)
+        # =========================================================
+        recent_discussions = Discussion.objects.filter(
+            circle__in=Circle.objects.filter(
+                members=user,
+                is_active=True,
+                is_deleted=False
+            )
+        ).order_by('-created_at')[:4].select_related('user', 'circle')
+        
+        recent_activity = []
+        for discussion in recent_discussions:
+            recent_activity.append({
+                'id': discussion.id,
+                'type': 'circle_discussion',
+                'description': f"{discussion.user.get_full_name() or discussion.user.username} posted in {discussion.circle.name}: {discussion.title}",
+                'title': discussion.title,
+                'created_at': discussion.created_at,
+                'user': {
+                    'id': discussion.user.id,
+                    'name': discussion.user.get_full_name() or discussion.user.username,
+                },
+                'circle': {
+                    'id': discussion.circle.id,
+                    'name': discussion.circle.name,
+                }
+            })
+        
+        # =========================================================
+        # 5. PENDING REQUESTS
+        # =========================================================
         pending_requests = JoinRequest.objects.filter(
             user=user,
             status='pending'
         ).count()
         
-        # Get user profile data
+        # =========================================================
+        # 6. USER PROFILE DATA
+        # =========================================================
         user_profile_data = {
             'id': user.id,
             'username': user.username,
@@ -506,11 +586,10 @@ def dashboard(request):
         return Response({
             'user': user_profile_data,
             'joined_circles': joined_circles,
+            'available_mentors': available_mentors,
+            'shared_peers': shared_peers,
+            'recent_activity': recent_activity,
             'pending_requests': pending_requests,
-            'mentor_sessions': [],  # Placeholder
-            'recommendations': [],  # Placeholder
-            'learning_progress': [],  # Placeholder
-            'discussion_activity': [],  # Placeholder
         }, status=status.HTTP_200_OK)
     
     except Exception as e:
