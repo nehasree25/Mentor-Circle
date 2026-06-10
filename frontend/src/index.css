@@ -1,17 +1,166 @@
-﻿@tailwind base;
+﻿@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  color: #0f172a;
-  background-color: #f8fafc;
+  --bg-primary: #f5f3ff;
+  --bg-secondary: #ede9fe;
+  --bg-light: #faf8ff;
+
+  --primary: #7c6cff;
+  --primary-light: #a78bfa;
+
+  --text-primary: #171717;
+  --text-secondary: #6b7280;
+
+  --glass-bg: rgba(255, 255, 255, 0.35);
+  --glass-border: rgba(255, 255, 255, 0.8);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
 body {
-  margin: 0;
-  font-family: "Segoe UI", "Inter", "Arial", sans-serif;
-  background: #f8fafc;
-  color: #0f172a;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  color: var(--text-primary);
+
+  background: white;
+
+  overflow-x: hidden;
+}
+
+/* Vertical light beams */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.25) 15%,
+      transparent 30%
+    ),
+    linear-gradient(
+      90deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.2) 55%,
+      transparent 70%
+    ),
+    linear-gradient(
+      90deg,
+      transparent 75%,
+      rgba(255, 255, 255, 0.25) 90%,
+      transparent 100%
+    );
+
+  z-index: -1;
+}
+
+/* Glass Container */
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.35);
+
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
+  border: 1px solid rgba(255, 255, 255, 0.8);
+
+  box-shadow:
+    0 8px 32px rgba(124, 108, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Glass Card */
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.45);
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  border: 1px solid rgba(255, 255, 255, 0.9);
+
+  box-shadow:
+    0 8px 24px rgba(124, 108, 255, 0.06);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 30px -12px rgba(124, 108, 255, 0.15);
+}
+
+/* Buttons */
+
+.primary-btn {
+  background: linear-gradient(
+    135deg,
+    #7c6cff,
+    #a78bfa
+  );
+
+  color: white;
+
+  transition: all 0.3s ease;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 10px 25px rgba(124, 108, 255, 0.25);
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.6);
+
+  backdrop-filter: blur(20px);
+
+  border: 1px solid rgba(255, 255, 255, 0.9);
+
+  transition: all 0.3s ease;
+}
+
+.secondary-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* Headings */
+
+.hero-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+}
+
+/* Smooth scroll */
+
+html {
+  scroll-behavior: smooth;
 }
 
 a {
