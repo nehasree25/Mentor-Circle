@@ -84,4 +84,38 @@ export const circleService = {
     });
     return response.data;
   },
+
+  // Resources API
+  getResources: async (circleId, params = {}) => {
+    const response = await axiosInstance.get(`circles/${circleId}/resources/`, { params });
+    return response.data;
+  },
+
+  createResource: async (circleId, formData) => {
+    const response = await axiosInstance.post(
+      `circles/${circleId}/resources/create/`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
+  updateResource: async (resourceId, data) => {
+    const response = await axiosInstance.patch(`circles/resources/${resourceId}/update/`, data);
+    return response.data;
+  },
+
+  deleteResource: async (resourceId) => {
+    const response = await axiosInstance.delete(`circles/resources/${resourceId}/delete/`);
+    return response.data;
+  },
+
+  getResource: async (resourceId) => {
+    const response = await axiosInstance.get(`circles/resources/${resourceId}/`);
+    return response.data;
+  },
 };

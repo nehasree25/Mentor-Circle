@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Circle, JoinRequest
+from .models import Circle, JoinRequest, Resource
 
 
 @admin.register(Circle)
@@ -381,3 +381,172 @@ class JoinRequestAdmin(admin.ModelAdmin):
             'user', 'circle', 'circle__created_by'
         ).prefetch_related('user__profile')
 
+
+
+@admin.register(Resource)
+class ResourceAdmin(admin.ModelAdmin):
+    """
+    Admin interface for Resource model management.
+    Handles resource uploads, editing, and deletion within circles.
+    """
+    
+    # Columns displayed in list view
+    list_display = (
+        'title', 'circle_link', 'resource_type_display',
+        'uploader_link', 'created_at', 'is_deleted_display'
+    )
+    
+    # Filters in sidebar
+    list_filter = ('resource_type', 'created_at', 'is_deleted')
+    
+    # Search fields
+    search_fields = (
+        'title', 'description', 'circle__name',
+        'uploaded_by__username', 'uploaded_by__first_name'
+    )
+    
+    # Read-only fields
+    readonly_fields = (
+        'circle', 'uploaded_by', 'file', 'created_at', 'updated_at',
+        'file_info'
+    )
+    
+    # Fieldsets for organized viewing
+    fieldsets = (
+        ('Resource Information', {
+            'fields': ('title', 'description', 'resource_type')
+        }),
+        ('Content', {
+            'fields': ('file', 'external_url', 'file_info'),
+            'classes': ('wide',)
+        }),
+        ('Circle & Creator', {
+            'fields': ('circle', 'uploaded_by')
+        }),
+        ('Status', {
+            'fields': ('is_deleted',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    # How many items per page
+    list_per_page = 50
+    
+    # Ordering
+    ordering = ('-created_at',)
+    
+    # ====================================================================
+    # Display Methods
+    # ====================================================================
+    
+    def circle_link(self, obj):
+        """Display circle with link to circle admin."""
+        return format_html(
+            '<a href="/admin/circles/circle/{}/change/">{}</a>',
+            obj.circle.id,
+            obj.circle.name
+        )
+    circle_link.short_description = 'Circle'
+    
+    def uploader_link(self, obj):
+        """Display uploader with link to user admin."""
+        return format_html(
+            '<a href="/admin/auth/user/{}/change/">{}</a>',
+            obj.uploaded_by.id,
+            obj.uploaded_by.get_full_name() or obj.uploaded_by.username
+        )
+    uploader_link.short_description = 'Uploaded By'
+    
+    def resource_type_display(self, obj):
+        """Display resource type with formatting."""
+        type_colors = {
+            'pdf': '#D32F2F',
+            'doc': '#1976D2',
+            'ppt': '#F57C00',
+            'link': '#388E3C',
+            'youtube': '#D32F2F',
+            'notes': '#F9A825',
+        }
+        color = type_colors.get(obj.resource_type, '#666')
+        label = obj.get_resource_type_display()
+        
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            color,
+            label
+        )
+    resource_type_display.short_description = 'Type'
+    
+    def is_deleted_display(self, obj):
+        """Display deletion status."""
+        if obj.is_deleted:
+            return format_html(
+                '<span style="color: red; font-weight: bold;">DELETED</span>'
+            )
+        else:
+            return format_html(
+                '<span style="color: green; font-weight: bold;">ACTIVE</span>'
+            )
+    is_deleted_display.short_description = 'Status'
+    
+    def file_info(self, obj):
+        """Display file information."""
+        if obj.file:
+            info = f'<strong>File:</strong> {obj.file.name}<br>'
+            try:
+                size_mb = obj.file.size / (1024 * 1024)
+                info += f'<strong>Size:</strong> {size_mb:.2f} MB<br>'
+            except:
+                pass
+            return format_html(info)
+        elif obj.external_url:
+            return format_html(
+                '<strong>URL:</strong> <a href="{}" target="_blank">{}</a>',
+                obj.external_url,
+                obj.external_url[:60] + '...' if len(obj.external_url) > 60 else obj.external_url
+            )
+        else:
+            return '—'
+    file_info.short_description = 'File/URL Information'
+    
+    # ====================================================================
+    # Actions
+    # ====================================================================
+    
+    def soft_delete_resources(self, request, queryset):
+        """Soft delete selected resources."""
+        deleted_count = 0
+        for resource in queryset.filter(is_deleted=False):
+            resource.soft_delete()
+            deleted_count += 1
+        
+        self.message_user(request, f'Soft deleted: {deleted_count} resource(s)')
+    soft_delete_resources.short_description = 'Soft delete selected resources'
+    
+    def restore_resources(self, request, queryset):
+        """Restore soft-deleted resources."""
+        restored_count = 0
+        for resource in queryset.filter(is_deleted=True):
+            resource.restore()
+            restored_count += 1
+        
+        self.message_user(request, f'Restored: {restored_count} resource(s)')
+    restore_resources.short_description = 'Restore deleted resources'
+    
+    actions = [soft_delete_resources, restore_resources]
+    
+    # ====================================================================
+    # Queryset Optimization
+    # ====================================================================
+    
+    def get_queryset(self, request):
+        """
+        Optimize queryset for admin list view.
+        """
+        qs = super().get_queryset(request)
+        return qs.select_related(
+            'circle', 'uploaded_by'
+        ).prefetch_related('circle__members')

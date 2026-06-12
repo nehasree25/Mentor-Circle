@@ -547,11 +547,14 @@ def dashboard(request):
         
         recent_activity = []
         for discussion in recent_discussions:
+            # Truncate content to 100 chars for description preview
+            content_preview = discussion.content[:100] + '...' if len(discussion.content) > 100 else discussion.content
             recent_activity.append({
                 'id': discussion.id,
                 'type': 'circle_discussion',
-                'description': f"{discussion.user.get_full_name() or discussion.user.username} posted in {discussion.circle.name}: {discussion.title}",
-                'title': discussion.title,
+                'description': f"{discussion.user.get_full_name() or discussion.user.username} posted in {discussion.circle.name}: {content_preview}",
+                'content': discussion.content,
+                'category': discussion.category,
                 'created_at': discussion.created_at,
                 'user': {
                     'id': discussion.user.id,

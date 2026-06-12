@@ -18,6 +18,7 @@ import { circleService } from "../services/circleService";
 import { mentorService } from "../services/mentorService";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "../components/common/Avatar";
+import ResourcesTab from "../components/circle/ResourcesTab";
 
 const CircleDetail = () => {
   const { circleId } = useParams();
@@ -679,11 +680,7 @@ const CircleDetail = () => {
           )}
 
           {activeTab === "resources" && (
-            <div className="text-center py-16 rounded-2xl bg-appbg">
-              <BookOpen className="w-12 h-12 mx-auto mb-4 text-textsecondary" />
-              <h3 className="font-semibold text-navy mb-2">Resources Coming Soon</h3>
-              <p className="text-textsecondary">Share and access learning materials in this section!</p>
-            </div>
+            <ResourcesTab circle={circle} user={user} />
           )}
         </div>
       </div>

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Circle, JoinRequest
+from .models import Circle, JoinRequest, Resource
 from discussions.models import Discussion
 from users.models import UserProfile
 from users.serializers import UserProfileSerializer
@@ -471,3 +471,165 @@ class CreateDiscussionSerializer(serializers.ModelSerializer):
         fields = (
             'content', 'category'
         )
+
+
+# ============================================================================
+# Resource Serializers
+# ============================================================================
+
+class ResourceSerializer(serializers.ModelSerializer):
+    """
+    Serializer for resource display and listing.
+    Includes uploader information and permissions.
+    """
+    
+    uploaded_by = UserBasicSerializer(read_only=True)
+    can_edit = serializers.SerializerMethodField()
+    can_delete = serializers.SerializerMethodField()
+    file_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Resource
+        fields = (
+            'id', 'title', 'description', 'resource_type',
+            'file_url', 'external_url', 'uploaded_by', 'created_at',
+            'updated_at', 'can_edit', 'can_delete'
+        )
+        read_only_fields = (
+            'id', 'uploaded_by', 'created_at', 'updated_at',
+            'can_edit', 'can_delete', 'file_url'
+        )
+    
+    def get_file_url(self, obj):
+        """Get the full URL for the uploaded file."""
+        if obj.file:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None
+    
+    def get_can_edit(self, obj):
+        """Check if current user can edit this resource."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.can_user_edit(request.user)
+        return False
+    
+    def get_can_delete(self, obj):
+        """Check if current user can delete this resource."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.can_user_delete(request.user)
+        return False
+
+
+class ResourceCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating new resources.
+    Validates that either file or external_url is provided.
+    """
+    
+    class Meta:
+        model = Resource
+        fields = (
+            'title', 'description', 'resource_type', 'file', 'external_url'
+        )
+        extra_kwargs = {
+            'title': {
+                'required': True,
+                'max_length': 255,
+                'min_length': 3,
+                'help_text': 'Resource title (3-255 characters)'
+            },
+            'description': {
+                'required': False,
+                'max_length': 1000,
+                'help_text': 'Detailed description (max 1000 characters)'
+            },
+            'resource_type': {
+                'required': True,
+                'help_text': 'Type of resource'
+            },
+            'file': {
+                'required': False,
+                'help_text': 'Upload file (required for PDF, DOC, PPT)'
+            },
+            'external_url': {
+                'required': False,
+                'help_text': 'External URL (required for links, YouTube)'
+            },
+        }
+    
+    def validate(self, data):
+        """Validate that file or URL is provided based on resource type."""
+        resource_type = data.get('resource_type')
+        file = data.get('file')
+        external_url = data.get('external_url')
+        
+        # Types that require a file
+        file_required_types = ['pdf', 'doc', 'ppt']
+        
+        # Types that require an external URL
+        url_required_types = ['link', 'youtube']
+        
+        if resource_type in file_required_types:
+            if not file:
+                raise serializers.ValidationError({
+                    'file': f"{resource_type.upper()} resources require a file upload."
+                })
+        
+        if resource_type in url_required_types:
+            if not external_url:
+                raise serializers.ValidationError({
+                    'external_url': f"{resource_type.upper()} resources require an external URL."
+                })
+        
+        if resource_type == 'notes':
+            # Notes don't require either, but let's ensure at least title + description
+            if not data.get('description'):
+                raise serializers.ValidationError({
+                    'description': "Notes require a description."
+                })
+        
+        return data
+    
+    def create(self, validated_data):
+        """Create resource with uploaded_by from request context."""
+        uploaded_by = self.context['request'].user
+        circle = self.context['circle']
+        
+        resource = Resource.objects.create(
+            circle=circle,
+            uploaded_by=uploaded_by,
+            **validated_data
+        )
+        
+        return resource
+
+
+class ResourceUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating resources.
+    Only allows updating certain fields.
+    """
+    
+    class Meta:
+        model = Resource
+        fields = (
+            'title', 'description', 'external_url'
+        )
+        extra_kwargs = {
+            'title': {
+                'required': False,
+                'max_length': 255,
+                'min_length': 3,
+            },
+            'description': {
+                'required': False,
+                'max_length': 1000,
+            },
+            'external_url': {
+                'required': False,
+            },
+        }

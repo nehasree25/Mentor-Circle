@@ -71,6 +71,25 @@ urlpatterns = [
     path('<int:circle_id>/discussions/create/', views.create_discussion, name='create_discussion'),
     
     # ============================================================================
+    # Resource Endpoints
+    # ============================================================================
+    
+    # List resources in a circle
+    path('<int:circle_id>/resources/', views.list_resources, name='list_resources'),
+    
+    # Create a new resource (owner/mentor only)
+    path('<int:circle_id>/resources/create/', views.create_resource, name='create_resource'),
+    
+    # Get a specific resource
+    path('resources/<int:resource_id>/', views.get_resource, name='get_resource'),
+    
+    # Update a resource (owner/mentor only)
+    path('resources/<int:resource_id>/update/', views.update_resource, name='update_resource'),
+    
+    # Delete a resource (soft delete, owner/mentor only)
+    path('resources/<int:resource_id>/delete/', views.delete_resource, name='delete_resource'),
+    
+    # ============================================================================
     # Circle Discovery Endpoints
     # ============================================================================
     

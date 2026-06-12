@@ -348,6 +348,131 @@ class Circle(models.Model):
         return self.get_peers().count()
 
 
+class Resource(models.Model):
+    """
+    Resource Model - Learning materials shared within a circle.
+    
+    A resource represents a learning material that can be:
+    - PDF documents
+    - DOC/DOCX files
+    - PowerPoint presentations
+    - External links
+    - YouTube videos
+    - Text notes
+    
+    PERMISSIONS:
+    - Only circle members, mentors, and owners can view resources
+    - Only circle owners and mentors can upload/edit/delete resources
+    - Soft delete support (resources remain in database)
+    
+    FUTURE READY:
+    - Designed to support AI-generated learning resources
+    - Can be extended with metadata for ML tagging
+    """
+    
+    RESOURCE_TYPE_CHOICES = (
+        ('pdf', 'PDF Document'),
+        ('doc', 'DOC/DOCX Document'),
+        ('ppt', 'PowerPoint (PPT/PPTX)'),
+        ('link', 'External Link'),
+        ('youtube', 'YouTube Video'),
+        ('notes', 'Notes / Text Resource'),
+    )
+    
+    # Relationships
+    circle = models.ForeignKey(
+        Circle,
+        on_delete=models.CASCADE,
+        related_name='resources',
+        help_text="Circle this resource belongs to"
+    )
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='uploaded_resources',
+        help_text="User who uploaded the resource"
+    )
+    
+    # Resource Information
+    title = models.CharField(
+        max_length=255,
+        help_text="Resource title"
+    )
+    description = models.TextField(
+        max_length=1000,
+        blank=True,
+        help_text="Detailed description of the resource"
+    )
+    resource_type = models.CharField(
+        max_length=20,
+        choices=RESOURCE_TYPE_CHOICES,
+        db_index=True,
+        help_text="Type of resource"
+    )
+    
+    # Content - either file or external URL
+    file = models.FileField(
+        upload_to='circle_resources/%Y/%m/%d/',
+        null=True,
+        blank=True,
+        help_text="Uploaded file (for PDF, DOC, PPT)"
+    )
+    external_url = models.URLField(
+        max_length=2000,
+        blank=True,
+        help_text="External URL (for links, YouTube)"
+    )
+    
+    # Soft Delete Fields
+    is_deleted = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Whether the resource is soft-deleted"
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+        help_text="When the resource was uploaded"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text="When the resource was last updated"
+    )
+    
+    class Meta:
+        verbose_name = 'Circle Resource'
+        verbose_name_plural = 'Circle Resources'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['circle', 'resource_type', '-created_at']),
+            models.Index(fields=['circle', '-created_at']),
+            models.Index(fields=['is_deleted']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title} in {self.circle.name}"
+    
+    def soft_delete(self):
+        """Soft delete the resource."""
+        self.is_deleted = True
+        self.save()
+    
+    def restore(self):
+        """Restore a soft-deleted resource."""
+        self.is_deleted = False
+        self.save()
+    
+    def can_user_edit(self, user):
+        """Check if user can edit this resource."""
+        return self.uploaded_by == user or self.circle.is_creator(user) or self.circle.is_mentor(user)
+    
+    def can_user_delete(self, user):
+        """Check if user can delete this resource."""
+        return self.uploaded_by == user or self.circle.is_creator(user) or self.circle.is_mentor(user)
+
+
 class JoinRequest(models.Model):
     """
     Join Request Model - Handles requests to join private circles.

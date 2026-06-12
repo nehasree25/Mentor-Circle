@@ -1,12 +1,11 @@
 ﻿import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Home,
   Users,
   UserCheck,
   Sparkles,
   User,
-  LogOut,
   X,
   Menu,
   BookOpen,
@@ -16,8 +15,7 @@ import Avatar from "./Avatar";
 
 const Navbar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { clearSession, user, profile } = useAuth();
+  const { user, profile } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
@@ -27,11 +25,6 @@ const Navbar = () => {
     { id: "peers", label: "Peers", path: "/peers", icon: Users },
     { id: "ai", label: "AI Recommendations", path: "/ai", icon: Sparkles },
   ];
-
-  const onLogout = () => {
-    clearSession();
-    navigate("/login");
-  };
 
   return (
     <>

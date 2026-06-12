@@ -14,7 +14,7 @@ env/
 ENV/
 *.sqlite3
 *.db
-
+backend/.env
 # Django Media Files
 backend/media/
 backend/profiles/

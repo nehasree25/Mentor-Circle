@@ -8,16 +8,10 @@ import Dashboard from "./pages/Dashboard";
 import Mentors from "./pages/Mentors";
 import { PeerDiscovery } from "./pages/PeerDiscovery";
 import Profile from "./pages/Profile";
+import AIRecommendations from "./pages/AIRecommendations";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
-
-const AIRecommendations = () => (
-  <div className="space-y-8">
-    <h1 className="text-4xl font-bold text-navy">AI Recommendations</h1>
-    <p className="text-textsecondary text-lg">Personalized suggestions coming soon!</p>
-  </div>
-);
 
 const App = () => {
   return (

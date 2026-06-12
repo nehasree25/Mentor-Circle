@@ -19,12 +19,13 @@ from django.db.models import Q, Count
 from django.contrib.auth.models import User
 from drf_spectacular.utils import extend_schema
 
-from .models import Circle, JoinRequest
+from .models import Circle, JoinRequest, Resource
 from discussions.models import Discussion
 from .serializers import (
     CircleCreateSerializer, CircleListSerializer, CircleDetailSerializer,
     JoinRequestCreateSerializer, JoinRequestListSerializer, JoinRequestDetailSerializer,
-    DiscussionSerializer, CreateDiscussionSerializer, UserBasicSerializer
+    DiscussionSerializer, CreateDiscussionSerializer, UserBasicSerializer,
+    ResourceSerializer, ResourceCreateSerializer, ResourceUpdateSerializer
 )
 from .permissions import (
     IsCircleCreator, CanJoinCircle, CanLeaveCircle, CanManageJoinRequest
@@ -952,3 +953,240 @@ def create_discussion(request, circle_id):
         }, status=status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+# ============================================================================
+# RESOURCE MANAGEMENT VIEWS
+# ============================================================================
+
+@extend_schema(
+    operation_id="list_resources",
+    description="List all resources in a circle",
+    tags=["Circles", "Resources"],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_resources(request, circle_id):
+    """
+    List all resources in a circle.
+    
+    Query parameters:
+    - resource_type: Filter by type (pdf, doc, ppt, link, youtube, notes)
+    - search: Search by title or description
+    - page: Pagination page number
+    
+    Only circle members can view resources.
+    """
+    try:
+        circle = Circle.objects.get(id=circle_id, is_active=True, is_deleted=False)
+    except Circle.DoesNotExist:
+        return Response({'error': 'Circle not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check if user is part of the circle
+    if not (circle.is_member(request.user) or circle.is_mentor(request.user) or circle.is_creator(request.user)):
+        return Response({'error': 'You are not part of this circle'}, status=status.HTTP_403_FORBIDDEN)
+    
+    # Get all non-deleted resources
+    resources = circle.resources.filter(is_deleted=False).select_related('uploaded_by', 'uploaded_by__profile').order_by('-created_at')
+    
+    # Filter by type
+    resource_type = request.query_params.get('resource_type')
+    if resource_type:
+        resources = resources.filter(resource_type=resource_type)
+    
+    # Search by title or description
+    search = request.query_params.get('search')
+    if search:
+        resources = resources.filter(
+            Q(title__icontains=search) | Q(description__icontains=search)
+        )
+    
+    # Pagination
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    paginated_resources = paginator.paginate_queryset(resources, request)
+    
+    serializer = ResourceSerializer(paginated_resources, many=True, context={'request': request})
+    
+    # Return paginated response with results directly
+    return paginator.get_paginated_response(serializer.data)
+
+
+@extend_schema(
+    operation_id="create_resource",
+    description="Upload a new resource to a circle",
+    tags=["Circles", "Resources"],
+    request=ResourceCreateSerializer,
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_resource(request, circle_id):
+    """
+    Create a new resource in a circle.
+    
+    Only circle owners and mentors can upload resources.
+    
+    Request body (multipart/form-data):
+    {
+        "title": "Python Basics",
+        "description": "Introduction to Python programming",
+        "resource_type": "pdf",
+        "file": <file>,
+        "external_url": ""
+    }
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        circle = Circle.objects.get(id=circle_id, is_active=True, is_deleted=False)
+    except Circle.DoesNotExist:
+        return Response({'error': 'Circle not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check permissions - only creators and mentors can upload
+    if not (circle.is_creator(request.user) or circle.is_mentor(request.user)):
+        return Response(
+            {'error': 'Only circle owners and mentors can upload resources'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Log incoming data for debugging
+    logger.info(f"Resource creation attempt by user {request.user.id} for circle {circle_id}")
+    logger.info(f"Request data: {request.data}")
+    logger.info(f"Request FILES: {request.FILES}")
+    
+    # Parse and validate
+    serializer = ResourceCreateSerializer(
+        data=request.data,
+        context={'request': request, 'circle': circle}
+    )
+    
+    if serializer.is_valid():
+        resource = serializer.save()
+        return_serializer = ResourceSerializer(resource, context={'request': request})
+        return Response({
+            'message': 'Resource uploaded successfully',
+            'resource': return_serializer.data
+        }, status=status.HTTP_201_CREATED)
+    
+    # Log validation errors
+    logger.error(f"Resource creation validation failed: {serializer.errors}")
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    operation_id="update_resource",
+    description="Update a resource",
+    tags=["Circles", "Resources"],
+    request=ResourceUpdateSerializer,
+)
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_resource(request, resource_id):
+    """
+    Update a resource (title, description, external_url).
+    
+    Only the uploader, circle owner, and mentors can edit.
+    """
+    try:
+        resource = Resource.objects.select_related('circle', 'uploaded_by').get(id=resource_id)
+    except Resource.DoesNotExist:
+        return Response({'error': 'Resource not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check if resource is deleted
+    if resource.is_deleted:
+        return Response({'error': 'Resource has been deleted'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check permissions
+    if not resource.can_user_edit(request.user):
+        return Response(
+            {'error': 'You do not have permission to edit this resource'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Update
+    serializer = ResourceUpdateSerializer(resource, data=request.data, partial=True)
+    
+    if serializer.is_valid():
+        resource = serializer.save()
+        return_serializer = ResourceSerializer(resource, context={'request': request})
+        return Response({
+            'message': 'Resource updated successfully',
+            'resource': return_serializer.data
+        }, status=status.HTTP_200_OK)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(
+    operation_id="delete_resource",
+    description="Soft delete a resource",
+    tags=["Circles", "Resources"],
+)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_resource(request, resource_id):
+    """
+    Soft delete a resource.
+    
+    Resource remains in database but is hidden from users.
+    Only the uploader, circle owner, and mentors can delete.
+    """
+    try:
+        resource = Resource.objects.select_related('circle', 'uploaded_by').get(id=resource_id)
+    except Resource.DoesNotExist:
+        return Response({'error': 'Resource not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check if resource is already deleted
+    if resource.is_deleted:
+        return Response({'error': 'Resource is already deleted'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check permissions
+    if not resource.can_user_delete(request.user):
+        return Response(
+            {'error': 'You do not have permission to delete this resource'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Soft delete
+    resource.soft_delete()
+    
+    return Response({
+        'message': 'Resource deleted successfully'
+    }, status=status.HTTP_204_NO_CONTENT)
+
+
+@extend_schema(
+    operation_id="get_resource",
+    description="Get a specific resource",
+    tags=["Circles", "Resources"],
+    responses={200: ResourceSerializer},
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_resource(request, resource_id):
+    """
+    Get a specific resource details.
+    
+    Only circle members can access.
+    """
+    try:
+        resource = Resource.objects.select_related('circle', 'uploaded_by', 'uploaded_by__profile').get(id=resource_id)
+    except Resource.DoesNotExist:
+        return Response({'error': 'Resource not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check if resource is deleted
+    if resource.is_deleted:
+        return Response({'error': 'Resource not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check if user is part of the circle
+    circle = resource.circle
+    if not (circle.is_member(request.user) or circle.is_mentor(request.user) or circle.is_creator(request.user)):
+        return Response(
+            {'error': 'You are not part of this circle'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    serializer = ResourceSerializer(resource, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
