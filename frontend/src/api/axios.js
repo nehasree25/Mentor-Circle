@@ -1,4 +1,4 @@
-﻿import axios from "axios";
+import axios from "axios";
 import toast from "react-hot-toast";
 
 // Backend Base URL
@@ -14,10 +14,17 @@ const axiosInstance = axios.create({
 // ================================
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("access_token");
+    // Skip token for auth routes (signup, login, refresh)
+    const isAuthRoute =
+      config.url?.includes("auth/login") ||
+      config.url?.includes("auth/signup") ||
+      config.url?.includes("auth/refresh");
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (!isAuthRoute) {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
 
     return config;
@@ -33,6 +40,14 @@ axiosInstance.interceptors.response.use(
 
   async (error) => {
     const originalRequest = error.config;
+
+    // Log all errors for debugging
+    console.log("API Error:", {
+      url: originalRequest?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+      headers: error.config?.headers,
+    });
 
     // Normalize error message for consistent handling
     if (!error.normalized) {

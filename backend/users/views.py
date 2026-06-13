@@ -8,6 +8,9 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.db.models import Q
 from drf_spectacular.utils import extend_schema
+import logging
+
+logger = logging.getLogger(__name__)
 
 from .serializers import (
     SignupSerializer, LoginSerializer, UserDetailSerializer, UserProfileSerializer
@@ -45,14 +48,21 @@ def signup(request):
     """
     
     if request.method == 'POST':
+        logger.info(f"Signup request received from IP: {get_client_ip(request)}")
+        logger.debug(f"Signup request data: {request.data}")
+        
         serializer = SignupSerializer(data=request.data)
         
         if serializer.is_valid():
+            logger.info(f"Signup validation successful for user: {serializer.validated_data.get('username')}")
+            
             # Create the user
             user = serializer.save()
             
             # Generate JWT tokens
             refresh = RefreshToken.for_user(user)
+            
+            logger.info(f"User created successfully: {user.username} (ID: {user.id})")
             
             return Response({
                 'message': 'User registered successfully!',
@@ -67,7 +77,18 @@ def signup(request):
                 'refresh': str(refresh),
             }, status=status.HTTP_201_CREATED)
         
+        logger.warning(f"Signup validation failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+def get_client_ip(request):
+    """Get client IP address from request"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 
 # ============================================================================
