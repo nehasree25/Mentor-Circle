@@ -1,6 +1,5 @@
 import React from "react";
-import { Users } from "lucide-react";
-import Avatar from "../common/Avatar";
+import { Users, User } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function PeerCard({ peer, onClick }) {
@@ -19,9 +18,11 @@ export function PeerCard({ peer, onClick }) {
       className="bg-white rounded-2xl p-6 border border-borderline shadow-soft transition-all cursor-pointer"
     >
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Avatar */}
+        {/* Avatar placeholder */}
         <div className="flex-shrink-0 flex flex-col items-center">
-          <Avatar user={peer} size="w-20 h-20" />
+          <div className="w-20 h-20 rounded-full bg-softblue flex items-center justify-center">
+            <User size={32} className="text-royal" />
+          </div>
         </div>
 
         {/* Main Content */}

@@ -4,7 +4,6 @@ import { PeerDetailsModal } from "../components/peers/PeerDetailsModal";
 import axios from "../api/axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import Avatar from "../components/common/Avatar";
 
 // Icons matching the design
 const PeopleIcon = ({ className = "", size = 20 }) => (
@@ -495,10 +494,7 @@ export function PeerDiscovery() {
                         style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(219,234,254,0.3) 100%)', backdropFilter: 'blur(4px)' }}
                       />
 
-                      {/* Avatar */}
-                      <div className="flex-shrink-0 relative z-10">
-                        <Avatar user={peer} size="w-20 h-20" />
-                      </div>
+
 
                       {/* Left: Name, role, bio, skills */}
                       <div className="flex-1 min-w-0 relative z-10">

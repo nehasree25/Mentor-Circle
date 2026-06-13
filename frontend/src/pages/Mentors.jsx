@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { mentorService } from "../services/mentorService";
+import { mentorshipService } from "../services/mentorshipService";
 import { useAuth } from "../context/AuthContext";
-import Avatar from "../components/common/Avatar";
 import ProfileDrawer from "../components/common/ProfileDrawer";
 import axios from "../api/axios";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, X, Loader2, Check } from "lucide-react";
 
 const normalize = (data) => (Array.isArray(data) ? data : data?.results || []);
 
-// ── Icons ────────────────────────────────────────────────────────────────────
+// ========================================================================
+// Icons
+// ========================================================================
 const MentorGroupIcon = ({ size = 28, className = "" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
@@ -27,18 +29,15 @@ const DomainIcon = ({ size = 28, className = "" }) => (
     <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
   </svg>
 );
-const GuidanceIcon = ({ size = 28, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-  </svg>
-);
 const BriefcaseIcon = ({ size = 14, className = "" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
   </svg>
 );
 
-// ── Domain options (matches backend) ────────────────────────────────────────
+// ========================================================================
+// Domain options
+// ========================================================================
 const DOMAIN_OPTIONS = [
   { value: "", label: "All Domains" },
   { value: "math", label: "Mathematics" },
@@ -67,6 +66,178 @@ const AVAILABILITY_OPTIONS = [
 
 const PAGE_SIZE = 6;
 
+// ========================================================================
+// Request Guidance Modal
+// ========================================================================
+const RequestGuidanceModal = ({ mentor, onClose }) => {
+  const [circles, setCircles] = useState([]);
+  const [loadingCircles, setLoadingCircles] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedCircle, setSelectedCircle] = useState("");
+  const [subject, setSubject] = useState("");
+  const [guidanceTopic, setGuidanceTopic] = useState("");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const fetchCircles = async () => {
+      try {
+        const { data } = await axios.get("dashboard/");
+        setCircles(data.joined_circles || []);
+      } catch (e) {
+        toast.error("Failed to load your circles");
+      } finally {
+        setLoadingCircles(false);
+      }
+    };
+    fetchCircles();
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedCircle || !subject || !message) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await mentorshipService.createGuidanceRequest(selectedCircle, mentor.id, {
+        subject,
+        guidance_topic: guidanceTopic,
+        message,
+      });
+      toast.success("Guidance request sent successfully!");
+      onClose();
+    } catch (e) {
+      toast.error(e?.response?.data?.detail || "Failed to send request");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const mentorName = mentor.first_name || mentor.last_name
+    ? `${mentor.first_name || ""} ${mentor.last_name || ""}`.trim()
+    : mentor.username;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="text-xl font-bold text-navy">Request Guidance from {mentorName}</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X size={20} className="text-gray-500" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-4">
+          {/* Circle Select */}
+          <div>
+            <label className="block text-sm font-semibold text-navy mb-2">
+              Choose a Circle <span className="text-red-500">*</span>
+            </label>
+            {loadingCircles ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 size={20} className="animate-spin text-blue-600" />
+              </div>
+            ) : circles.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                You need to join a circle first before requesting guidance.
+              </p>
+            ) : (
+              <select
+                value={selectedCircle}
+                onChange={(e) => setSelectedCircle(e.target.value)}
+                className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
+              >
+                <option value="">Select a circle...</option>
+                {circles.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Subject */}
+          <div>
+            <label className="block text-sm font-semibold text-navy mb-2">
+              Subject <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="e.g., Calculus, Machine Learning"
+              className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 bg-gray-50"
+            />
+          </div>
+
+          {/* Guidance Topic */}
+          <div>
+            <label className="block text-sm font-semibold text-navy mb-2">
+              Specific Topic
+            </label>
+            <input
+              type="text"
+              value={guidanceTopic}
+              onChange={(e) => setGuidanceTopic(e.target.value)}
+              placeholder="e.g., Chain Rule, Neural Network Basics"
+              className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 bg-gray-50"
+            />
+          </div>
+
+          {/* Message */}
+          <div>
+            <label className="block text-sm font-semibold text-navy mb-2">
+              Message <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Explain what you need help with..."
+              rows={4}
+              className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 bg-gray-50 resize-none"
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 text-sm font-semibold border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || !selectedCircle || !subject || !message}
+              className="flex-1 px-4 py-2.5 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Check size={16} />
+                  Send Request
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const Mentors = () => {
   const { user } = useAuth();
 
@@ -76,6 +247,7 @@ const Mentors = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedMentor, setSelectedMentor] = useState(null);
+  const [requestModalMentor, setRequestModalMentor] = useState(null);
 
   const [stats, setStats] = useState({ total_mentors: 0, available_mentors: 0, domains_covered: 0 });
 
@@ -162,7 +334,9 @@ const Mentors = () => {
 
   return (
     <div>
-      {/* ── Hero ───────────────────────────────────────────────────────────── */}
+      {/* ========================================================================
+            Hero
+      ======================================================================== */}
       <div className="flex items-center justify-between mb-6 bg-white rounded-2xl border border-gray-200 shadow-sm px-8 py-6 overflow-hidden relative">
         <div className="z-10">
           <h1 className="text-3xl font-bold text-navy mb-1">Discover Mentors</h1>
@@ -197,7 +371,9 @@ const Mentors = () => {
         </div>
       </div>
 
-      {/* ── Filters ────────────────────────────────────────────────────────── */}
+      {/* ========================================================================
+            Filters
+      ======================================================================== */}
       <form onSubmit={handleApply} className="bg-white rounded-2xl border border-gray-200 shadow-sm px-5 py-4 mb-5 flex flex-wrap items-center gap-3">
         {/* Search */}
         <div className="relative flex-1 min-w-48">
@@ -255,7 +431,9 @@ const Mentors = () => {
         </button>
       </form>
 
-      {/* ── Stats ──────────────────────────────────────────────────────────── */}
+      {/* ========================================================================
+            Stats
+      ======================================================================== */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
@@ -291,7 +469,9 @@ const Mentors = () => {
         </div>
       </div>
 
-      {/* ── Results header ─────────────────────────────────────────────────── */}
+      {/* ========================================================================
+            Results Header
+      ======================================================================== */}
       {!loading && (
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm font-semibold text-navy">
@@ -300,7 +480,9 @@ const Mentors = () => {
         </div>
       )}
 
-      {/* ── Mentor Cards ───────────────────────────────────────────────────── */}
+      {/* ========================================================================
+            Mentor Cards
+      ======================================================================== */}
       {loading ? (
         <div className="grid grid-cols-2 gap-4">
           {[1, 2, 3, 4].map(i => (
@@ -344,11 +526,6 @@ const Mentors = () => {
                 key={mentor.id}
                 className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-5 flex gap-4"
               >
-                {/* Avatar */}
-                <div className="flex-shrink-0">
-                  <Avatar user={mentor} size="w-16 h-16" />
-                </div>
-
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   {/* Name + verification icon */}
@@ -413,7 +590,7 @@ const Mentors = () => {
                           View Profile
                         </button>
                         <button
-                          onClick={() => toast("Guidance requests coming soon!")}
+                          onClick={() => setRequestModalMentor(mentor)}
                           className="px-4 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                         >
                           Request Guidance
@@ -428,7 +605,9 @@ const Mentors = () => {
         </div>
       )}
 
-      {/* ── Pagination ─────────────────────────────────────────────────────── */}
+      {/* ========================================================================
+            Pagination
+      ======================================================================== */}
       {!loading && totalPages > 1 && (
         <div className="flex items-center justify-center gap-1 mt-6">
           <button
@@ -464,11 +643,24 @@ const Mentors = () => {
           </button>
         </div>
       )}
-      {/* ── Profile Drawer ─────────────────────────────────────────────────── */}
+
+      {/* ========================================================================
+            Profile Drawer
+      ======================================================================== */}
       {selectedMentor && (
         <ProfileDrawer
           person={selectedMentor}
           onClose={() => setSelectedMentor(null)}
+        />
+      )}
+
+      {/* ========================================================================
+            Request Guidance Modal
+      ======================================================================== */}
+      {requestModalMentor && (
+        <RequestGuidanceModal
+          mentor={requestModalMentor}
+          onClose={() => setRequestModalMentor(null)}
         />
       )}
     </div>

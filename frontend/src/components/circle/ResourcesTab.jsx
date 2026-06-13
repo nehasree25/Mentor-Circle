@@ -13,9 +13,9 @@ import {
   Edit2,
   Trash2,
   Search,
+  User,
 } from "lucide-react";
 import { circleService } from "../../services/circleService";
-import Avatar from "../common/Avatar";
 
 const RESOURCE_TYPES = {
   pdf: { label: "PDF Document", icon: File, color: "text-red-600" },
@@ -379,7 +379,9 @@ export default function ResourcesTab({ circle, user }) {
 
               {/* Uploader Info */}
               <div className="flex items-center gap-2 mb-4 py-3 border-t border-b border-borderline">
-                <Avatar user={resource.uploaded_by} size="w-8 h-8" />
+                <div className="w-8 h-8 rounded-full bg-softblue flex items-center justify-center flex-shrink-0">
+                  <User size={14} className="text-royal" />
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-navy truncate">
                     {resource.uploaded_by.first_name || resource.uploaded_by.username}

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { X, BookOpen, Target, Lightbulb, Award } from "lucide-react";
+import { X, BookOpen, Target, Lightbulb, Award, User } from "lucide-react";
 import { mentorshipService } from "../../services/mentorshipService";
-import Avatar from "../common/Avatar";
 import toast from "react-hot-toast";
 
 export default function UserProfileModal({
@@ -63,17 +62,9 @@ export default function UserProfileModal({
         <div className="space-y-6">
           {/* Profile Header */}
           <div className="flex items-center gap-4 pb-6 border-b border-borderline">
-            <Avatar
-              user={{
-                profile: {
-                  profile_picture: profile.profile?.profile_picture,
-                },
-                first_name: profile.first_name,
-                last_name: profile.last_name,
-                username: profile.username,
-              }}
-              size="w-20 h-20"
-            />
+            <div className="w-20 h-20 rounded-full bg-softblue flex items-center justify-center">
+              <User size={32} className="text-royal" />
+            </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-navy">
                 {profile.first_name} {profile.last_name}

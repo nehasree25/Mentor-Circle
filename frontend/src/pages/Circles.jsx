@@ -280,7 +280,7 @@ const Circles = () => {
               >
                 View Details
               </button>
-              {!circle.is_member && !circle.is_creator && !circle.pending_request ? (
+              {!circle.is_member && !circle.is_creator && !circle.is_mentor && !circle.pending_request ? (
                 <button
                   onClick={() => handleJoinCircle(circle.id, circle.is_private)}
                   disabled={circle.is_full}
@@ -291,7 +291,8 @@ const Circles = () => {
               ) : (
                 <span className="px-4 py-2 text-sm font-semibold text-navy">
                   {circle.is_creator && "Creator"}
-                  {circle.is_member && !circle.is_creator && "Member"}
+                  {circle.is_mentor && !circle.is_creator && "Mentor"}
+                  {circle.is_member && !circle.is_creator && !circle.is_mentor && "Member"}
                   {circle.pending_request && "Pending"}
                 </span>
               )}

@@ -25,9 +25,10 @@ export const mentorshipService = {
     return response.data;
   },
 
-  rejectGuidanceRequest: async (requestId) => {
+  rejectGuidanceRequest: async (requestId, rejectionReason) => {
     const response = await axiosInstance.post(
-      `mentorship/guidance/request/${requestId}/reject/`
+      `mentorship/guidance/request/${requestId}/reject/`,
+      { rejection_reason: rejectionReason }
     );
     return response.data;
   },

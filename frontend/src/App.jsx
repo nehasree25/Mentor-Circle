@@ -9,6 +9,7 @@ import Mentors from "./pages/Mentors";
 import { PeerDiscovery } from "./pages/PeerDiscovery";
 import Profile from "./pages/Profile";
 import AIRecommendations from "./pages/AIRecommendations";
+import Requests from "./pages/Requests";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -28,6 +29,7 @@ const App = () => {
           <Route path="/mentors" element={<Mentors />} />
           <Route path="/peers" element={<PeerDiscovery />} />
           <Route path="/ai" element={<AIRecommendations />} />
+          <Route path="/requests" element={<Requests />} />
           <Route path="/profile" element={<Profile />} />
         </Route>
       </Route>

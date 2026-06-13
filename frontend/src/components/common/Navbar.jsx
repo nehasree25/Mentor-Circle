@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Home,
@@ -9,9 +9,9 @@ import {
   X,
   Menu,
   BookOpen,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import Avatar from "./Avatar";
 
 const Navbar = () => {
   const location = useLocation();
@@ -23,6 +23,7 @@ const Navbar = () => {
     { id: "circles", label: "Circles", path: "/circles", icon: BookOpen },
     { id: "mentors", label: "Mentors", path: "/mentors", icon: UserCheck },
     { id: "peers", label: "Peers", path: "/peers", icon: Users },
+    { id: "requests", label: "Requests", path: "/requests", icon: MessageSquare },
     { id: "ai", label: "AI Roadmap", path: "/ai", icon: Sparkles },
   ];
 
@@ -64,19 +65,15 @@ const Navbar = () => {
                 );
               })}
 
-              {/* Profile Avatar - Right */}
+              {/* Profile Link - Right */}
               <div className="flex items-center gap-3 pl-4 border-l border-borderline ml-4">
                 <Link
                   to="/profile"
                   className="flex items-center gap-2 p-2 rounded-lg hover:bg-softblue transition-all duration-200"
                 >
-                  <Avatar 
-                    user={{
-                      ...user,
-                      profile: profile
-                    }} 
-                    size="w-9 h-9" 
-                  />
+                  <div className="w-9 h-9 rounded-full bg-softblue flex items-center justify-center">
+                    <User size={16} className="text-royal" />
+                  </div>
                 </Link>
               </div>
             </div>
@@ -120,13 +117,9 @@ const Navbar = () => {
                 {/* Mobile Profile Section */}
                 <div className="px-4 py-3 border-t border-borderline mt-2">
                   <div className="flex items-center gap-3 mb-4">
-                    <Avatar 
-                      user={{
-                        ...user,
-                        profile: profile
-                      }} 
-                      size="w-10 h-10" 
-                    />
+                    <div className="w-10 h-10 rounded-full bg-softblue flex items-center justify-center">
+                      <User size={18} className="text-royal" />
+                    </div>
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-navy">
                         {user?.first_name} {user?.last_name || ""}

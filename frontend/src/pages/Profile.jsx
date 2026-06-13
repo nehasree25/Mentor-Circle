@@ -8,8 +8,6 @@ import {
   Award,
   BookOpen,
   Save,
-  Camera,
-  Loader2,
   LogOut,
   Code,
   Heart,
@@ -18,17 +16,13 @@ import {
 } from "lucide-react";
 import { authService } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
-import Avatar from "../components/common/Avatar";
-import { API_BASE_URL } from "../api/axios";
 
 const Profile = () => {
   const { user: authUser, setSession, updateProfile, clearSession } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null);
   
   // User data
   const [userData, setUserData] = useState({
@@ -50,7 +44,6 @@ const Profile = () => {
     mentorship_expertise: "",
     learning_goals: "",
     is_mentor: false,
-    profile_picture: null,
   });
   
   const [domainChoices, setDomainChoices] = useState([]);
@@ -84,21 +77,6 @@ const Profile = () => {
       } else {
         setDomainChoices(defaultDomainChoices);
       }
-      
-      const getPreviewUrl = (pic) => {
-        if (!pic) return null;
-        if (pic.startsWith("http://") || pic.startsWith("https://")) {
-          return pic;
-        }
-        const baseMediaUrl = API_BASE_URL.replace(/\/api$/, "");
-        if (pic.startsWith("/")) {
-          return `${baseMediaUrl}${pic}`;
-        }
-        return `${baseMediaUrl}/media/${pic}`;
-      };
-      if (profileRes.profile_picture) {
-        setImagePreview(getPreviewUrl(profileRes.profile_picture));
-      }
     } catch (error) {
       console.error("Profile load error:", error);
       toast.error("Failed to load profile");
@@ -110,33 +88,6 @@ const Profile = () => {
   useEffect(() => {
     fetchProfile();
   }, []);
-
-  const handleImageSelect = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => setImagePreview(e.target.result);
-    reader.readAsDataURL(file);
-
-    setUploading(true);
-    const formData = new FormData();
-    formData.append("profile_picture", file);
-
-    try {
-      const updatedProfile = await authService.userprofile.update(formData);
-      setProfileData({
-        ...profileData,
-        profile_picture: updatedProfile.profile_picture,
-      });
-      updateProfile(updatedProfile);
-      toast.success("Profile picture updated!");
-    } catch (error) {
-      toast.error("Failed to upload profile picture");
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -150,7 +101,6 @@ const Profile = () => {
           : null,
         is_mentor: profileData.role === "mentor",
       };
-      delete profilePayload.profile_picture;
       
       const updatedProfile = await authService.userprofile.update(profilePayload);
       
@@ -239,33 +189,6 @@ const Profile = () => {
       {/* Profile Header Card */}
       <div className="rounded-2xl border border-borderline bg-white p-8 shadow-soft">
         <div className="flex gap-8 items-start">
-          {/* Avatar Section */}
-          <div className="relative flex-shrink-0">
-            <Avatar 
-              user={{
-                ...userData,
-                profile: profileData
-              }} 
-              size="w-32 h-32" 
-            />
-            {editing && (
-              <label className="absolute bottom-0 right-0 bg-royal text-white p-3 rounded-full hover:bg-darkblue transition-all cursor-pointer shadow-lg">
-                {uploading ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <Camera size={18} />
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageSelect}
-                  disabled={uploading}
-                />
-              </label>
-            )}
-          </div>
-
           {/* Info Section */}
           <div className="flex-1">
             <div className="flex items-start justify-between">

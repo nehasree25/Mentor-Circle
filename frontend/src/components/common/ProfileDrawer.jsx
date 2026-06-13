@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { X, User, BookOpen, Lightbulb, Target, Globe } from "lucide-react";
-import Avatar from "./Avatar";
 
 /**
  * Slide-in profile drawer.
@@ -77,9 +76,8 @@ const ProfileDrawer = ({ person, onClose }) => {
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-          {/* Avatar + name */}
+          {/* Name */}
           <div className="flex flex-col items-center text-center gap-3">
-            <Avatar user={person} size="w-16 h-16" />
             <div>
               <p className="text-[17px] font-bold text-[#0F172A]">{fullName}</p>
               {(profile.current_role || profile.role) && (

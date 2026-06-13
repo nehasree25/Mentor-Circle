@@ -49,10 +49,10 @@ def create_guidance_request(request, circle_id, mentor_id):
     except User.DoesNotExist:
         return Response({'error': 'Mentor not found'}, status=status.HTTP_404_NOT_FOUND)
     
-    # Check if mentor is actually a mentor in this circle
-    if not circle.is_mentor(mentor):
+    # Check if mentor is a mentor role (from profile)
+    if not hasattr(mentor, 'profile') or mentor.profile.role != 'mentor':
         return Response(
-            {'error': 'User is not a mentor in this circle'},
+            {'error': 'User is not a mentor'},
             status=status.HTTP_400_BAD_REQUEST
         )
     
@@ -147,7 +147,9 @@ def accept_guidance_request(request, request_id):
         return Response({
             'message': message,
             'request': serializer.data,
-            'conversation_id': guidance_request.conversation.id
+            'conversation_id': guidance_request.conversation.id,
+            'circle_id': guidance_request.circle.id,
+            'circle_is_private': guidance_request.circle.is_private
         }, status=status.HTTP_200_OK)
     else:
         return Response({'error': message}, status=status.HTTP_400_BAD_REQUEST)
@@ -171,7 +173,15 @@ def reject_guidance_request(request, request_id):
             status=status.HTTP_403_FORBIDDEN
         )
     
-    success, message = guidance_request.reject()
+    # Get rejection reason from request data
+    rejection_reason = request.data.get('rejection_reason')
+    if not rejection_reason:
+        return Response(
+            {'error': 'Rejection reason is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    success, message = guidance_request.reject(rejection_reason)
     
     if success:
         serializer = GuidanceRequestSerializer(guidance_request)

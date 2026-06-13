@@ -13,11 +13,11 @@ import {
   Calendar,
   Plus,
   X,
+  User,
 } from "lucide-react";
 import { circleService } from "../services/circleService";
 import { mentorService } from "../services/mentorService";
 import { useAuth } from "../context/AuthContext";
-import Avatar from "../components/common/Avatar";
 import ResourcesTab from "../components/circle/ResourcesTab";
 
 const CircleDetail = () => {
@@ -277,7 +277,7 @@ const CircleDetail = () => {
           Back to Circles
         </button>
         <div className="flex items-center gap-3">
-          {!circle.is_member && !circle.is_creator && !circle.pending_request ? (
+          {!circle.is_member && !circle.is_creator && !circle.is_mentor && !circle.pending_request ? (
             <button
               onClick={handleJoinCircle}
               disabled={circle.is_full}
@@ -403,7 +403,9 @@ const CircleDetail = () => {
                     {pendingRequests.map(request => (
                       <div key={request.id} className="flex items-center justify-between p-4 rounded-xl border border-borderline">
                         <div className="flex items-center gap-3">
-                          <Avatar user={request.user} size="w-10 h-10" />
+                          <div className="w-10 h-10 rounded-full bg-softblue flex items-center justify-center">
+                            <User size={18} className="text-royal" />
+                          </div>
                           <div>
                             <p className="font-semibold text-navy">
                               {request.user?.first_name} {request.user?.last_name}
@@ -466,7 +468,9 @@ const CircleDetail = () => {
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {filteredMentors.map((mentor) => (
                           <div key={mentor.id} className="rounded-2xl border border-borderline bg-white p-6 shadow-soft">
-                            <Avatar user={mentor} size="w-14 h-14" />
+                            <div className="w-14 h-14 rounded-full bg-softblue flex items-center justify-center mb-4">
+                              <User size={24} className="text-royal" />
+                            </div>
                             <h3 className="font-bold text-navy">
                               {mentor.first_name} {mentor.last_name}
                             </h3>
@@ -525,7 +529,9 @@ const CircleDetail = () => {
                             onClick={() => handleAddMentor(mentor.id)}
                           >
                             <div className="flex items-center gap-3">
-                              <Avatar user={mentor} size="w-10 h-10" />
+                              <div className="w-10 h-10 rounded-full bg-softblue flex items-center justify-center">
+                                <User size={18} className="text-royal" />
+                              </div>
                               <div>
                                 <p className="font-semibold text-navy">
                                   {mentor.first_name} {mentor.last_name}
@@ -564,7 +570,9 @@ const CircleDetail = () => {
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {filteredPeers.map((peer) => (
                           <div key={peer.id} className="rounded-2xl border border-borderline bg-white p-6 shadow-soft">
-                            <Avatar user={peer} size="w-14 h-14" />
+                            <div className="w-14 h-14 rounded-full bg-softblue flex items-center justify-center mb-4">
+                              <User size={24} className="text-royal" />
+                            </div>
                             <h3 className="font-bold text-navy">
                               {peer.first_name} {peer.last_name}
                             </h3>
@@ -626,8 +634,10 @@ const CircleDetail = () => {
                       key={msg.id}
                       className="flex gap-3 items-start"
                     >
-                      {/* Avatar */}
-                      <Avatar user={msg.user} size="w-10 h-10" />
+                      {/* Avatar placeholder */}
+                      <div className="w-10 h-10 rounded-full bg-softblue flex items-center justify-center flex-shrink-0">
+                        <User size={18} className="text-royal" />
+                      </div>
 
                       {/* Message Content */}
                       <div className="flex-1">

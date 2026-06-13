@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { X, Users, Send, CheckCircle, MessageSquare } from "lucide-react";
-import Avatar from "../common/Avatar";
+import { X, Users, Send, CheckCircle, MessageSquare, User } from "lucide-react";
 import axios from "../../api/axios";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
@@ -102,7 +101,9 @@ export function PeerDetailsModal({ peer, isOpen, onClose, onSuccess }) {
         <div className="p-6 space-y-8">
           {/* Basic Info */}
           <div className="flex items-center gap-4">
-            <Avatar user={peer} size="w-20 h-20" />
+            <div className="w-20 h-20 rounded-full bg-softblue flex items-center justify-center">
+              <User size={32} className="text-royal" />
+            </div>
             <div>
               <h3 className="text-xl font-bold text-navy">
                 {peer.first_name || peer.last_name

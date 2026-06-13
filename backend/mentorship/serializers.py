@@ -32,11 +32,11 @@ class GuidanceRequestSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'sender', 'mentor', 'circle', 'subject',
             'guidance_topic', 'message', 'status', 'created_at',
-            'updated_at', 'responded_at'
+            'updated_at', 'responded_at', 'rejection_reason'
         )
         read_only_fields = (
             'id', 'sender', 'mentor', 'status', 'created_at',
-            'updated_at', 'responded_at'
+            'updated_at', 'responded_at', 'rejection_reason'
         )
 
 
@@ -53,7 +53,7 @@ class GuidanceRequestCreateSerializer(serializers.ModelSerializer):
                 'help_text': 'Subject area (e.g., Neural Networks)'
             },
             'guidance_topic': {
-                'required': True,
+                'required': False,
                 'max_length': 300,
                 'help_text': 'Specific topic for guidance'
             },

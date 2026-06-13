@@ -26,6 +26,7 @@ urlpatterns = [
     path("api/circles/", include("circles.urls")),
     path("api/mentors/", include("mentors.urls")),
     path("api/ai/", include("ai_engine.urls")),
+    path("api/mentorship/", include("mentorship.urls")),
 ]
 
 urlpatterns += static(

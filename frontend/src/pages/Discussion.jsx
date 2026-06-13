@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, User } from "lucide-react";
 import { mentorshipService } from "../services/mentorshipService";
 import { useAuth } from "../context/AuthContext";
-import Avatar from "../components/common/Avatar";
 
 const Discussion = () => {
   const { conversationId } = useParams();
@@ -104,7 +103,11 @@ const Discussion = () => {
         
         <div className="flex-1 ml-4">
           <div className="flex items-center gap-3 mb-3">
-            {otherParticipant && <Avatar user={otherParticipant} size="w-10 h-10" />}
+            {otherParticipant && (
+              <div className="w-10 h-10 rounded-full bg-softblue flex items-center justify-center">
+                <User size={18} className="text-royal" />
+              </div>
+            )}
             <div>
               <h2 className="text-2xl font-bold text-navy">
                 {otherParticipant?.first_name} {otherParticipant?.last_name}
@@ -147,7 +150,9 @@ const Discussion = () => {
               key={msg.id}
               className={`flex gap-3 ${msg.sender.id === user?.id ? "flex-row-reverse" : ""}`}
             >
-              <Avatar user={msg.sender} size="w-10 h-10" />
+              <div className="w-10 h-10 rounded-full bg-softblue flex items-center justify-center flex-shrink-0">
+                <User size={18} className="text-royal" />
+              </div>
               <div
                 className={`flex-1 max-w-md ${
                   msg.sender.id === user?.id

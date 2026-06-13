@@ -36,7 +36,6 @@ class UserProfile(models.Model):
     
     # Profile information
     bio = models.TextField(max_length=500, blank=True, help_text="Brief bio about yourself")
-    profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
     
     # Role and interests
     # SECURITY: role = 'mentor' is required to mentor in circles

@@ -50,7 +50,6 @@ class PeerSerializer(serializers.ModelSerializer):
                 "github": profile.github,
                 "linkedin": profile.linkedin,
                 "availability": profile.availability,
-                "profile_picture": profile.profile_picture.url if profile.profile_picture else None,
             }
         except Exception:
             return None
@@ -130,7 +129,6 @@ class PeerDetailSerializer(serializers.ModelSerializer):
                 "github": profile.github,
                 "linkedin": profile.linkedin,
                 "availability": profile.availability,
-                "profile_picture": profile.profile_picture.url if profile.profile_picture else None,
             }
         except Exception:
             return None

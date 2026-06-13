@@ -71,6 +71,12 @@ class GuidanceRequest(models.Model):
         db_index=True,
         help_text="Request status"
     )
+    rejection_reason = models.TextField(
+        max_length=500,
+        null=True,
+        blank=True,
+        help_text="Reason provided by mentor when rejecting the request"
+    )
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -101,6 +107,22 @@ class GuidanceRequest(models.Model):
         self.responded_at = timezone.now()
         self.save()
         
+        # Add the mentor to the circle's mentors if not already there
+        can_add, reason = self.circle.can_add_mentor(self.mentor)
+        if can_add:
+            self.circle.mentors.add(self.mentor)
+        
+        # Handle adding the sender to the circle if needed
+        if self.circle.is_private:
+            # For private circles, add sender as member if not already a member
+            if not self.circle.is_member(self.sender) and not self.circle.is_mentor(self.sender) and not self.circle.is_creator(self.sender):
+                self.circle.members.add(self.sender)
+                # Auto-add as mentor if sender is a registered mentor
+                if hasattr(self.sender, 'profile') and self.sender.profile.role == 'mentor':
+                    can_add_sender, _ = self.circle.can_add_mentor(self.sender)
+                    if can_add_sender:
+                        self.circle.mentors.add(self.sender)
+        
         # Create a guidance conversation
         conversation = Conversation.objects.create(
             conversation_type='guidance',
@@ -111,12 +133,13 @@ class GuidanceRequest(models.Model):
         
         return True, "Guidance request accepted and conversation created"
     
-    def reject(self):
-        """Reject the guidance request."""
+    def reject(self, rejection_reason=None):
+        """Reject the guidance request with an optional reason."""
         if self.status != 'pending':
             return False, "Request is not pending"
         
         self.status = 'rejected'
+        self.rejection_reason = rejection_reason
         self.responded_at = timezone.now()
         self.save()
         

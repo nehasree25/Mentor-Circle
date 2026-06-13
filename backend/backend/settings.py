@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "users.apps.UsersConfig",
     "circles.apps.CirclesConfig",
     "mentors.apps.MentorsConfig",
+    "mentorship.apps.MentorshipConfig",
     "discussions.apps.DiscussionsConfig",
     "ai_engine.apps.AiEngineConfig",
     "peers.apps.PeersConfig",
