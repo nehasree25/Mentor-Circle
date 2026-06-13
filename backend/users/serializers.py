@@ -101,6 +101,7 @@ class SignupSerializer(serializers.ModelSerializer):
     mentorship_expertise = serializers.CharField(required=False, allow_blank=True)
     learning_goals = serializers.CharField(required=False, allow_blank=True)
     bio = serializers.CharField(required=False, allow_blank=True)
+    linkedin = serializers.URLField(required=False, allow_blank=True)
     
     class Meta:
         model = User
@@ -109,7 +110,8 @@ class SignupSerializer(serializers.ModelSerializer):
             'password', 'password2',
             'role', 'domain', 'interests', 'experience_level',
             'skills', 'years_of_experience', 'is_mentor',
-            'mentorship_expertise', 'learning_goals', 'bio'
+            'mentorship_expertise', 'learning_goals', 'bio',
+            'linkedin'
         )
         read_only_fields = ('id',)
         extra_kwargs = {
@@ -164,7 +166,7 @@ class SignupSerializer(serializers.ModelSerializer):
         profile_field_names = [
             'role', 'domain', 'interests', 'experience_level', 'skills',
             'years_of_experience', 'is_mentor', 'mentorship_expertise',
-            'learning_goals', 'bio'
+            'learning_goals', 'bio', 'linkedin'
         ]
         for field in profile_field_names:
             if field in validated_data:

@@ -230,7 +230,7 @@ export function PeerDiscovery() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-4 gap-4 mb-3">
+        <div className="grid grid-cols-3 gap-4 mb-3">
           {/* Total Peers */}
           <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
@@ -261,17 +261,6 @@ export function PeerDiscovery() {
             <div>
               <p className="text-xl font-bold text-navy leading-tight">{stats.commonInterests}</p>
               <p className="text-xs text-textsecondary">Common Interests</p>
-            </div>
-          </div>
-
-          {/* New Connections */}
-          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
-              <NetworkIcon className="text-purple-500" size={22} />
-            </div>
-            <div>
-              <p className="text-xl font-bold text-navy leading-tight">{stats.newConnections}</p>
-              <p className="text-xs text-textsecondary">New Collaborations</p>
             </div>
           </div>
         </div>
@@ -607,15 +596,6 @@ export function PeerDiscovery() {
                             className="w-full py-2 border border-gray-300 rounded-lg text-sm font-semibold text-navy hover:bg-gray-50 transition-colors"
                           >
                             View Profile
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); toast.info("Coming soon!"); }}
-                            className="w-full py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
-                          >
-                            {getConnectLabel(peer)}
-                          </button>
-                          <button className="w-full flex items-center justify-center py-1.5 rounded-lg hover:bg-gray-50 transition-colors mt-1">
-                            <Bookmark size={16} className="text-gray-400" />
                           </button>
                         </div>
                       </div>

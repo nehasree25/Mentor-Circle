@@ -19,6 +19,7 @@ import { circleService } from "../services/circleService";
 import { mentorService } from "../services/mentorService";
 import { useAuth } from "../context/AuthContext";
 import ResourcesTab from "../components/circle/ResourcesTab";
+import { PeerDetailsModal } from "../components/peers/PeerDetailsModal";
 
 const CircleDetail = () => {
   const { circleId } = useParams();
@@ -36,6 +37,7 @@ const CircleDetail = () => {
   const [isSending, setIsSending] = useState(false);
   const [pollingInterval, setPollingInterval] = useState(null);
   const [pendingRequests, setPendingRequests] = useState([]);
+  const [selectedPeer, setSelectedPeer] = useState(null);
   const messagesEndRef = useRef(null);
 
   const tabs = [
@@ -580,8 +582,8 @@ const CircleDetail = () => {
                             <p className="text-sm font-medium text-gray-600 mt-1">
                               Member{circle.creator?.id === peer.id ? ' • Owner' : ''}
                             </p>
-                            <button className="mt-4 w-full bg-appbg text-navy rounded-xl px-4 py-2 font-semibold hover:bg-softblue transition-all">
-                              Study Together
+                            <button onClick={() => setSelectedPeer(peer)} className="mt-4 w-full bg-appbg text-navy rounded-xl px-4 py-2 font-semibold hover:bg-softblue transition-all">
+                              View Profile
                             </button>
                           </div>
                         ))}
@@ -717,6 +719,16 @@ const CircleDetail = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Peer Details Modal */}
+      {selectedPeer && (
+        <PeerDetailsModal
+          peer={selectedPeer}
+          isOpen={!!selectedPeer}
+          onClose={() => setSelectedPeer(null)}
+          onSuccess={() => {}}
+        />
       )}
     </div>
   );
