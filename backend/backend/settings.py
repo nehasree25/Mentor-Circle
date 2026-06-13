@@ -201,16 +201,6 @@ REST_FRAMEWORK = {
     
     # Schema for Swagger/OpenAPI documentation
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    
-    # Rate Limiting - Prevents abuse and ensures fair usage
-    "DEFAULT_THROTTLE_CLASSES": [
-        "rest_framework.throttling.UserRateThrottle",
-        "rest_framework.throttling.AnonRateThrottle",
-    ],
-    "DEFAULT_THROTTLE_RATES": {
-        "user": "100/day",      # Authenticated users: 100 requests per day
-        "anon": "20/day",       # Anonymous users: 20 requests per day
-    },
 }
 
 # ============================================================================
