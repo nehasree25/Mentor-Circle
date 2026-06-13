@@ -1,388 +1,372 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
-import { useState, useEffect } from "react";
-import heroImage from "../assets/hero.png";
+import {
+  ArrowRight,
+  Users,
+  CheckCircle2,
+  MessageSquare,
+  Shield,
+  Zap,
+  Globe,
+  Brain,
+  BookOpen,
+  Search,
+  UserCheck,
+  Lightbulb,
+  Star,
+  Clock,
+  TrendingUp,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import HeroSection from "../components/landing/HeroSection";
+import LandingNavbar from "../components/landing/LandingNavbar";
+import Footer from "../components/landing/Footer";
+
+/* ─── Reusable section badge ─── */
+const SectionBadge = ({ children }) => (
+  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#EFF6FF] border border-[#BFDBFE] rounded-full text-[#1a56db] text-[12px] font-semibold mb-5">
+    {children}
+  </div>
+);
+
+/* ─── Why MentorCircle ─── */
+const whyItems = [
+  {
+    icon: Brain,
+    title: "Expert-Led Learning",
+    description: "Learn directly from professionals who've been where you want to go. Every circle is guided by vetted, experienced mentors.",
+    color: "text-[#1a56db]",
+    bg: "bg-[#EFF6FF]",
+  },
+  {
+    icon: Users,
+    title: "Cohort-Based Growth",
+    description: "Progress alongside motivated peers. Accountability, shared goals, and collaborative energy drive measurably better outcomes.",
+    color: "text-violet-600",
+    bg: "bg-violet-50",
+  },
+  {
+    icon: Zap,
+    title: "Structured Curriculum",
+    description: "No scattered playlists. Each circle follows a focused roadmap — discussions, resources, and milestones that build momentum.",
+    color: "text-amber-600",
+    bg: "bg-amber-50",
+  },
+  {
+    icon: Globe,
+    title: "Real Connections",
+    description: "Build a professional network that actually matters. Mentors and peers who support your long-term career journey.",
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
+  },
+  {
+    icon: Shield,
+    title: "Verified Mentors",
+    description: "Every mentor is reviewed for professional credibility. You get guidance from people with real industry experience.",
+    color: "text-rose-600",
+    bg: "bg-rose-50",
+  },
+  {
+    icon: MessageSquare,
+    title: "Discussions & Resources",
+    description: "Combine structured discussions with async resource sharing. Everything your circle needs, in one place.",
+    color: "text-cyan-600",
+    bg: "bg-cyan-50",
+  },
+];
+
+/* ─── How Circles Work — 3 illustrative cards ─── */
+const circleCards = [
+  {
+    icon: Search,
+    color: "text-[#1a56db]",
+    bg: "bg-[#EFF6FF]",
+    grad: "from-[#1a56db] to-[#7C3AED]",
+    title: "Discover & Join a Circle",
+    description:
+      "Browse circles organised by domain and skill level — Machine Learning, Web Development, Data Science, and more. Public circles let you join instantly; private ones require a quick mentor approval.",
+    points: ["Filter by domain or skill level", "Public or invite-only circles", "Join with one click"],
+  },
+  {
+    icon: BookOpen,
+    color: "text-violet-600",
+    bg: "bg-violet-50",
+    grad: "from-violet-500 to-indigo-600",
+    title: "Learn, Discuss & Share",
+    description:
+      "Inside your circle you get access to a structured discussion board, shared resources (PDFs, links, notes), and a community of peers all working toward the same goals.",
+    points: ["Structured discussion threads", "Upload & share resources", "Peer-to-peer collaboration"],
+  },
+  {
+    icon: TrendingUp,
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
+    grad: "from-emerald-500 to-teal-600",
+    title: "Grow With Your Circle",
+    description:
+      "Track milestones, build your portfolio, and grow your professional network. The circle model keeps you accountable and makes progress visible — so you actually finish what you start.",
+    points: ["Milestone & progress tracking", "Build a real portfolio", "Expand your professional network"],
+  },
+];
+
+/* ─── How Mentorship Works — 3 illustrative cards ─── */
+const mentorCards = [
+  {
+    icon: UserCheck,
+    color: "text-[#1a56db]",
+    bg: "bg-[#EFF6FF]",
+    title: "Find Your Mentor",
+    description:
+      "Browse verified professionals across every domain. Filter by expertise, industry, or availability. Every mentor on MentorCircle is reviewed so you know you're getting real guidance.",
+    points: ["Verified professional profiles", "Filter by domain & expertise", "See mentor backgrounds"],
+  },
+  {
+    icon: Star,
+    color: "text-amber-600",
+    bg: "bg-amber-50",
+    title: "Get Personalised Guidance",
+    description:
+      "Your mentor leads your circle, answers questions, shares resources, and gives direct feedback on your work. It's structured mentorship — not just a one-off chat.",
+    points: ["Direct feedback on your work", "Structured circle sessions", "Q&A and async discussions"],
+  },
+  {
+    icon: Clock,
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
+    title: "Mentor on Your Schedule",
+    description:
+      "Mentors lead circles around their own schedule. Whether you have two hours a week or ten, you choose your commitment. The platform handles everything else.",
+    points: ["Flexible time commitment", "Lead at your own pace", "Async-friendly platform"],
+  },
+];
+
+/* ─── How It Works steps ─── */
+const steps = [
+  { num: "01", title: "Discover", description: "Browse circles curated around your goals. Filter by domain, skill level, or schedule." },
+  { num: "02", title: "Join or Apply", description: "Request to join a circle or create your own. Public circles are open; private ones require mentor approval." },
+  { num: "03", title: "Learn Together", description: "Participate in structured discussions, resource sharing, and peer collaboration." },
+  { num: "04", title: "Grow & Advance", description: "Track your progress, expand your network, and build a portfolio that proves your expertise." },
+];
+
 
 const Landing = () => {
-  const [circles, setCircles] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Fetch circles from backend
-    const fetchCircles = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/api/circles/');
-        const data = await response.json();
-        setCircles(data.slice(0, 3)); // Get first 3 circles
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching circles:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchCircles();
-  }, []);
+  const { isAuthenticated } = useAuth();
 
   return (
-    <main className="min-h-screen relative overflow-hidden" style={{
-      background: 'linear-gradient(180deg, #F8FAFC 0%, #F8FAFC 50%, #F8FAFC 100%)',
-      fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-    }}>
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {/* Floating orb 1 */}
-        <motion.div
-          className="absolute w-96 h-96 bg-gradient-to-r from-purple-200 to-purple-100 rounded-full blur-3xl opacity-20"
-          style={{ top: '10%', left: '10%' }}
-          animate={{ 
-            y: [0, 50, 0],
-            x: [0, 30, 0]
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
+    <main className="bg-white min-h-screen overflow-hidden">
+      <LandingNavbar />
+      <HeroSection />
 
-        {/* Floating orb 2 */}
-        <motion.div
-          className="absolute w-96 h-96 bg-gradient-to-r from-blue-200 to-blue-100 rounded-full blur-3xl opacity-20"
-          style={{ top: '50%', right: '10%' }}
-          animate={{ 
-            y: [0, -50, 0],
-            x: [0, -30, 0]
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        />
-
-        {/* Floating orb 3 */}
-        <motion.div
-          className="absolute w-80 h-80 bg-gradient-to-r from-indigo-200 to-indigo-100 rounded-full blur-3xl opacity-15"
-          style={{ bottom: '10%', left: '30%' }}
-          animate={{ 
-            y: [0, 40, 0],
-            x: [0, -40, 0]
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
-
-      {/* Sticky Header Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white bg-opacity-30 border-b border-white border-opacity-50">
-        <div className="mx-auto max-w-full px-8 md:px-16 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Mentor Circle" className="h-8 w-auto" />
-            <span className="text-lg font-semibold text-[#0F172A]">Mentor Circle</span>
-          </div>
-          
-          <div className="hidden md:flex items-center gap-12">
-            <a href="#home" className="text-[14px] text-[#475569] hover:text-[#0F172A] transition">Home</a>
-            <a href="#circles" className="text-[14px] text-[#475569] hover:text-[#0F172A] transition">Circles</a>
-            <a href="#how" className="text-[14px] text-[#475569] hover:text-[#0F172A] transition">How It Works</a>
-            <a href="#mentors" className="text-[14px] text-[#475569] hover:text-[#0F172A] transition">Mentors</a>
-            <a href="#resources" className="text-[14px] text-[#475569] hover:text-[#0F172A] transition">Resources</a>
+      {/* ─── Why MentorCircle ─── */}
+      <section id="why" className="py-14 bg-white">
+        <div className="max-w-6xl mx-auto px-6 md:px-10">
+          <div className="text-center mb-10">
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+              <SectionBadge>Why MentorCircle</SectionBadge>
+            </motion.div>
+            <motion.h2 initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }} className="text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight mb-4">
+              Everything you need to grow faster
+            </motion.h2>
+            <motion.p initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }} className="text-[#64748B] max-w-xl mx-auto text-[15px]">
+              We combine the best of cohort learning, expert mentorship, and real community — in one focused platform.
+            </motion.p>
           </div>
 
-          <Link to="/login" className="px-6 py-2.5 bg-[#0F172A] text-white text-[13px] font-semibold rounded-full hover:bg-black transition inline-block">
-            Get Started
-          </Link>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="relative pt-24 md:pt-28 z-10">
-        
-        {/* Hero Section with Glass Box */}
-        <section id="home" className="w-full px-8 md:px-20 py-2 md:py-4">
-          <div className="mx-auto max-w-full rounded-[40px] border-2 border-white bg-white bg-opacity-20 backdrop-blur-lg p-8 md:p-16 shadow-lg min-h-auto" 
-            style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)' }}>
-            <div className="grid md:grid-cols-2 gap-16 items-center h-full">
-              {/* Left Content */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {whyItems.map((item, i) => (
               <motion.div
+                key={i}
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                className="space-y-8"
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.07 }}
+                className="p-6 bg-white border border-[#E2E8F0] rounded-2xl hover:border-[#BFDBFE] hover:shadow-[0_8px_24px_rgba(26,86,219,0.08)] transition-all duration-200"
               >
-                <h1 className="text-[40px] md:text-[48px] text-[#0F172A]" 
-                  style={{ fontFamily: 'Playfair Display, serif', fontWeight: 500, letterSpacing: '-0.04em', lineHeight: 1.05, wordSpacing: '0.12em' }}>
-                  Find Your Circle
-                  <br />
-                  Learn Together
-                  <br />
-                  <span className="text-[#2563EB]">Grow Faster</span>
-                </h1>
+                <div className={`w-10 h-10 ${item.bg} rounded-xl flex items-center justify-center mb-4`}>
+                  <item.icon size={20} className={item.color} />
+                </div>
+                <h3 className="text-[15px] font-semibold text-[#0F172A] mb-2">{item.title}</h3>
+                <p className="text-[13.5px] text-[#64748B] leading-relaxed">{item.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-                <p className="text-[15px] text-[#475569] leading-[1.7] font-normal max-w-md"
-                  style={{ letterSpacing: '0.002em' }}>
-                  Join mentor-led circles for collaborative learning, discussions, and meaningful connections.
-                </p>
+      {/* ─── Circles ─── */}
+      <section id="circles" className="py-14 bg-[#F8FAFC]">
+        <div className="max-w-6xl mx-auto px-6 md:px-10">
+          <div className="text-center mb-10">
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+              <SectionBadge>Our Circles</SectionBadge>
+            </motion.div>
+            <motion.h2 initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }} className="text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight mb-4">
+              How circles work
+            </motion.h2>
+            <motion.p initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }} className="text-[#64748B] max-w-xl mx-auto text-[15px]">
+              A circle is a small, focused learning group led by an experienced mentor. Here's how it comes together.
+            </motion.p>
+          </div>
 
-                <div className="flex flex-wrap gap-4 pt-4">
-                  <Link to="/login" className="px-8 py-3 bg-[#2563EB] text-white text-[14px] font-semibold rounded-full hover:bg-blue-600 transition flex items-center gap-2">
-                    Explore Circles
-                    <ArrowRight size={16} />
-                  </Link>
-                  <button className="px-8 py-3 border-2 border-[#0F172A] text-[#0F172A] text-[14px] font-semibold rounded-full hover:bg-gray-50 transition">
-                    Become a Mentor
-                  </button>
+          <div className="grid md:grid-cols-3 gap-6">
+            {circleCards.map((card, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55, delay: i * 0.1 }}
+                className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden hover:shadow-[0_12px_32px_rgba(15,23,42,0.08)] hover:-translate-y-1 transition-all duration-200"
+              >
+                {/* Color top bar */}
+                <div className={`h-1.5 bg-gradient-to-r ${card.grad}`} />
+                <div className="p-6">
+                  {/* Step number + icon */}
+                  <div className="flex items-center justify-between mb-5">
+                    <span className="text-[11px] font-bold text-[#94A3B8] tracking-widest uppercase">
+                      Step {i + 1}
+                    </span>
+                    <div className={`w-10 h-10 ${card.bg} rounded-xl flex items-center justify-center`}>
+                      <card.icon size={20} className={card.color} />
+                    </div>
+                  </div>
+
+                  <h3 className="text-[16px] font-bold text-[#0F172A] mb-3">{card.title}</h3>
+                  <p className="text-[13.5px] text-[#64748B] leading-relaxed mb-5">{card.description}</p>
+
+                  {/* Bullet points */}
+                  <ul className="flex flex-col gap-2">
+                    {card.points.map((pt, j) => (
+                      <li key={j} className="flex items-center gap-2.5">
+                        <CheckCircle2 size={14} className={card.color} />
+                        <span className="text-[13px] text-[#475569]">{pt}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </motion.div>
-
-              {/* Right Content - Hero Image */}
-              <motion.div
-                initial={{ opacity: 0, x: 40 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="hidden md:block"
-              >
-                <img 
-                  src={heroImage} 
-                  alt="Mentor Circle Interface" 
-                  className="w-full h-auto rounded-3xl scale-150"
-                />
-              </motion.div>
-            </div>
+            ))}
           </div>
-        </section>
 
-        {/* What Are Mentor Circles Section */}
-        <section id="about" className="w-full px-8 md:px-20 py-2 md:py-4">
-          <div className="mx-auto max-w-full rounded-[40px] border-2 border-white bg-white bg-opacity-20 backdrop-blur-lg p-8 md:p-16 shadow-lg"
-            style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)' }}>
-            <div className="grid md:grid-cols-2 gap-12 mb-16">
-              <div>
-                <h2 className="text-[36px] md:text-[44px] text-[#0F172A]" 
-                  style={{ fontFamily: 'Playfair Display, serif', fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                  What Are Mentor Circles?
-                </h2>
-                <p className="text-[15px] text-[#475569] leading-[1.7] mt-6" style={{ letterSpacing: '0.002em' }}>
-                  Mentor Circles are focused communities where mentors and learners come together to share knowledge, solve problems, and support each other's growth.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-6">
-                {/* Card 1 */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                  className="p-6 rounded-2xl border border-white bg-white bg-opacity-40 backdrop-blur-md text-center"
-                >
-                  <div className="text-[32px] mb-3">💬</div>
-                  <h3 className="text-[16px] text-[#0F172A] font-semibold mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    Mentor-Led Discussions
-                  </h3>
-                  <p className="text-[12px] text-[#475569]" style={{ letterSpacing: '0.002em' }}>
-                    Learn from experienced mentors
-                  </p>
-                </motion.div>
-
-                {/* Card 2 */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1 }}
-                  className="p-6 rounded-2xl border border-white bg-white bg-opacity-40 backdrop-blur-md text-center"
-                >
-                  <div className="text-[32px] mb-3">👥</div>
-                  <h3 className="text-[16px] text-[#0F172A] font-semibold mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    Collaborative Learning
-                  </h3>
-                  <p className="text-[12px] text-[#475569]" style={{ letterSpacing: '0.002em' }}>
-                    Learn with peers
-                  </p>
-                </motion.div>
-
-                {/* Card 3 */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  className="p-6 rounded-2xl border border-white bg-white bg-opacity-40 backdrop-blur-md text-center"
-                >
-                  <div className="text-[32px] mb-3">❤️</div>
-                  <h3 className="text-[16px] text-[#0F172A] font-semibold mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    Meaningful Connections
-                  </h3>
-                  <p className="text-[12px] text-[#475569]" style={{ letterSpacing: '0.002em' }}>
-                    Build relationships
-                  </p>
-                </motion.div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Explore Top Circles Section */}
-        <section id="circles" className="w-full px-8 md:px-20 py-2 md:py-4">
-          <div className="mx-auto max-w-full rounded-[40px] border-2 border-white bg-white bg-opacity-20 backdrop-blur-lg p-8 md:p-16 shadow-lg"
-            style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)' }}>
-            <div className="mb-12">
-              <h2 className="text-[36px] md:text-[44px] text-[#0F172A]" 
-                style={{ fontFamily: 'Playfair Display, serif', fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                Explore Top Circles
-              </h2>
-              <p className="text-[15px] text-[#475569] leading-[1.7] mt-4" style={{ letterSpacing: '0.002em' }}>
-                Join circles focused on the topics that matter to you.
-              </p>
-            </div>
-
-            {loading ? (
-              <div className="text-center py-12">
-                <p className="text-[#475569]">Loading circles...</p>
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-3 gap-8">
-                {circles.map((circle, index) => (
-                  <motion.div
-                    key={circle.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    className="p-8 rounded-2xl border border-white bg-white bg-opacity-40 backdrop-blur-md"
-                  >
-                    <h3 className="text-[20px] text-[#0F172A] font-semibold mb-4" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      {circle.name}
-                    </h3>
-                    {circle.description && (
-                      <p className="text-[14px] text-[#475569] leading-relaxed mb-6" style={{ letterSpacing: '0.002em' }}>
-                        {circle.description.substring(0, 100)}...
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <div className="text-[12px] text-[#475569]">
-                        {circle.members_count || 0} members
-                      </div>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        className="text-[#2563EB] hover:text-blue-600 transition"
-                      >
-                        →
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-
-            <div className="text-center mt-12">
-              <Link to="/circles" className="inline-block px-8 py-3 bg-white bg-opacity-40 border border-white text-[#2563EB] text-[14px] font-semibold rounded-full hover:bg-opacity-60 transition">
-                Explore All Circles →
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* How It Works Section */}
-        <section id="how" className="w-full px-8 md:px-20 py-2 md:py-4">
-          <div className="mx-auto max-w-full rounded-[40px] border-2 border-white bg-white bg-opacity-20 backdrop-blur-lg p-8 md:p-16 shadow-lg"
-            style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)' }}>
-            <div className="text-center mb-16">
-              <h2 className="text-[36px] md:text-[44px] text-[#0F172A]" 
-                style={{ fontFamily: 'Playfair Display, serif', fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                How It Works
-              </h2>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              {/* Step 1 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="p-8 rounded-2xl border border-white bg-white bg-opacity-40 backdrop-blur-md text-center"
-              >
-                <div className="text-[48px] mb-4 font-bold text-[#2563EB]">1</div>
-                <h3 className="text-[20px] text-[#0F172A] font-semibold mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  Discover
-                </h3>
-                <p className="text-[14px] text-[#475569] leading-relaxed" style={{ letterSpacing: '0.002em' }}>
-                  Find circles that match your interests and goals
-                </p>
-              </motion.div>
-
-              {/* Step 2 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="p-8 rounded-2xl border border-white bg-white bg-opacity-40 backdrop-blur-md text-center"
-              >
-                <div className="text-[48px] mb-4 font-bold text-[#2563EB]">2</div>
-                <h3 className="text-[20px] text-[#0F172A] font-semibold mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  Connect
-                </h3>
-                <p className="text-[14px] text-[#475569] leading-relaxed" style={{ letterSpacing: '0.002em' }}>
-                  Join discussions and interact with mentors
-                </p>
-              </motion.div>
-
-              {/* Step 3 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="p-8 rounded-2xl border border-white bg-white bg-opacity-40 backdrop-blur-md text-center"
-              >
-                <div className="text-[48px] mb-4 font-bold text-[#2563EB]">3</div>
-                <h3 className="text-[20px] text-[#0F172A] font-semibold mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  Grow
-                </h3>
-                <p className="text-[14px] text-[#475569] leading-relaxed" style={{ letterSpacing: '0.002em' }}>
-                  Learn and achieve your goals together
-                </p>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* Final CTA Section */}
-        <section className="w-full px-8 md:px-20 py-2 md:py-4">
-          <div className="mx-auto max-w-full rounded-[40px] border-2 border-white bg-white bg-opacity-20 backdrop-blur-lg p-8 md:p-16 shadow-lg text-center"
-            style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)' }}>
-            <h2 className="text-[36px] md:text-[44px] text-[#0F172A] mb-4" 
-              style={{ fontFamily: 'Playfair Display, serif', fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-              Learning is better when we do it together
-            </h2>
-            <p className="text-[16px] text-[#475569] mb-8 max-w-2xl mx-auto" style={{ letterSpacing: '0.002em' }}>
-              Be part of a super-circle community that helps you learn, share, and grow together.
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Link to="/circles" className="px-8 py-3 bg-[#2563EB] text-white text-[14px] font-semibold rounded-full hover:bg-blue-600 transition flex items-center gap-2">
-                Explore Circles
-                <ArrowRight size={16} />
-              </Link>
-              <button className="px-8 py-3 border-2 border-[#2563EB] text-[#2563EB] text-[14px] font-semibold rounded-full hover:bg-blue-50 transition">
-                Become a Mentor
-              </button>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      {/* Footer */}
-      <footer className="relative z-10 mt-12 mb-6 px-8 md:px-20 text-center">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <img src="/logo.png" alt="Mentor Circle" className="h-6 w-auto" />
-          <span className="text-sm font-semibold text-[#0F172A]">Mentor Circle</span>
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="text-center mt-12"
+          >
+            <Link
+              to={isAuthenticated ? "/circles" : "/login"}
+              className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#1a56db] hover:bg-[#1648c4] text-white text-[14px] font-semibold rounded-xl transition-all duration-200 shadow-[0_4px_16px_rgba(26,86,219,0.3)]"
+            >
+              Explore circles
+              <ArrowRight size={15} />
+            </Link>
+          </motion.div>
         </div>
-        <div className="flex justify-center gap-8 mb-4 text-[13px]">
-          <a href="#circles" className="text-[#475569] hover:text-[#0F172A]">Circles</a>
-          <a href="#how" className="text-[#475569] hover:text-[#0F172A]">How It Works</a>
-          <a href="#mentors" className="text-[#475569] hover:text-[#0F172A]">Mentors</a>
-          <a href="#resources" className="text-[#475569] hover:text-[#0F172A]">Resources</a>
+      </section>
+
+      {/* ─── How It Works ─── */}
+      <section id="how" className="py-14 bg-white">
+        <div className="max-w-6xl mx-auto px-6 md:px-10">
+          <div className="text-center mb-10">
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+              <SectionBadge>How It Works</SectionBadge>
+            </motion.div>
+            <motion.h2 initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }} className="text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight mb-4">
+              From sign-up to career growth<br />in four steps
+            </motion.h2>
+          </div>
+
+          <div className="relative">
+            <div className="hidden md:block absolute top-[28px] left-[calc(12.5%+1rem)] right-[calc(12.5%+1rem)] h-px bg-gradient-to-r from-transparent via-[#BFDBFE] to-transparent" />
+            <div className="grid md:grid-cols-4 gap-8">
+              {steps.map((step, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.55, delay: i * 0.1 }}
+                  className="relative text-center"
+                >
+                  <div className="w-14 h-14 bg-white border-2 border-[#BFDBFE] rounded-full flex items-center justify-center mx-auto mb-5 relative z-10">
+                    <span className="text-[13px] font-extrabold text-[#1a56db]">{step.num}</span>
+                  </div>
+                  <h3 className="text-[15px] font-semibold text-[#0F172A] mb-2">{step.title}</h3>
+                  <p className="text-[13.5px] text-[#64748B] leading-relaxed">{step.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
-        <p className="text-[12px] text-[#475569]">© 2024 Mentor Circle. All rights reserved.</p>
-      </footer>
+      </section>
+
+      {/* ─── For Mentors ─── */}
+      <section id="mentors" className="py-14 bg-[#F8FAFC]">
+        <div className="max-w-6xl mx-auto px-6 md:px-10">
+          <div className="text-center mb-10">
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+              <SectionBadge>For Mentors</SectionBadge>
+            </motion.div>
+            <motion.h2 initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }} className="text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight mb-4">
+              How mentorship works
+            </motion.h2>
+            <motion.p initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }} className="text-[#64748B] max-w-xl mx-auto text-[15px]">
+              Whether you're seeking a mentor or ready to become one — here's how the mentorship experience works on MentorCircle.
+            </motion.p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {mentorCards.map((card, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.55, delay: i * 0.1 }}
+                className="bg-white border border-[#E2E8F0] rounded-2xl p-6 hover:shadow-[0_12px_32px_rgba(15,23,42,0.08)] hover:-translate-y-1 transition-all duration-200"
+              >
+                <div className={`w-10 h-10 ${card.bg} rounded-xl flex items-center justify-center mb-5`}>
+                  <card.icon size={20} className={card.color} />
+                </div>
+                <h3 className="text-[16px] font-bold text-[#0F172A] mb-3">{card.title}</h3>
+                <p className="text-[13.5px] text-[#64748B] leading-relaxed mb-5">{card.description}</p>
+                <ul className="flex flex-col gap-2">
+                  {card.points.map((pt, j) => (
+                    <li key={j} className="flex items-center gap-2.5">
+                      <CheckCircle2 size={14} className={card.color} />
+                      <span className="text-[13px] text-[#475569]">{pt}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="text-center mt-12"
+          >
+            <Link
+              to={isAuthenticated ? "/mentors" : "/login"}
+              className="inline-flex items-center gap-2 px-7 py-3.5 bg-[#0F172A] hover:bg-[#1e293b] text-white text-[14px] font-semibold rounded-xl transition-all duration-200 shadow-sm"
+            >
+              Explore mentors
+              <ArrowRight size={15} />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      <Footer />
     </main>
   );
 };
 
 export default Landing;
-
-
-
-
-
-
-

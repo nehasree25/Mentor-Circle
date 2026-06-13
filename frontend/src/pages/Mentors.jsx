@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
 import { mentorService } from "../services/mentorService";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "../components/common/Avatar";
+import ProfileDrawer from "../components/common/ProfileDrawer";
 import axios from "../api/axios";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -69,13 +69,13 @@ const PAGE_SIZE = 6;
 
 const Mentors = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedMentor, setSelectedMentor] = useState(null);
 
   const [stats, setStats] = useState({ total_mentors: 0, available_mentors: 0, domains_covered: 0 });
 
@@ -399,7 +399,7 @@ const Mentors = () => {
                   <div className="flex gap-2 mt-auto">
                     {isCurrentUser ? (
                       <button
-                        onClick={() => navigate("/profile")}
+                        onClick={() => window.location.href = "/profile"}
                         className="px-4 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg text-navy hover:bg-gray-50 transition-colors"
                       >
                         Your Profile
@@ -407,7 +407,7 @@ const Mentors = () => {
                     ) : (
                       <>
                         <button
-                          onClick={() => navigate(`/mentors/${mentor.id}`)}
+                          onClick={() => setSelectedMentor(mentor)}
                           className="px-4 py-1.5 text-xs font-semibold border border-gray-300 rounded-lg text-navy hover:bg-gray-50 transition-colors"
                         >
                           View Profile
@@ -463,6 +463,13 @@ const Mentors = () => {
             <ChevronRight size={14} />
           </button>
         </div>
+      )}
+      {/* ── Profile Drawer ─────────────────────────────────────────────────── */}
+      {selectedMentor && (
+        <ProfileDrawer
+          person={selectedMentor}
+          onClose={() => setSelectedMentor(null)}
+        />
       )}
     </div>
   );

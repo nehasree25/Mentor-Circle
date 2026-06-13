@@ -23,7 +23,7 @@ const Navbar = () => {
     { id: "circles", label: "Circles", path: "/circles", icon: BookOpen },
     { id: "mentors", label: "Mentors", path: "/mentors", icon: UserCheck },
     { id: "peers", label: "Peers", path: "/peers", icon: Users },
-    { id: "ai", label: "AI Recommendations", path: "/ai", icon: Sparkles },
+    { id: "ai", label: "AI Roadmap", path: "/ai", icon: Sparkles },
   ];
 
   return (

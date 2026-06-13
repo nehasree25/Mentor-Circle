@@ -16,7 +16,7 @@ from circles.models import Circle
 
 class PeerPagination(PageNumberPagination):
     page_size = 2
-    page_size_query_param = "page_size"
+    page_size_query_param = "limit"
     max_page_size = 50
 
 
