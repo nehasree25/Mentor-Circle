@@ -1,295 +1,280 @@
-# MentorCircle 
+# 🎓 MentorCircle
 
-MentorCircle is a modern STEM learning collaboration platform where students and mentors connect through focused learning circles. 
+MentorCircle is a modern STEM learning collaboration platform where students and mentors connect through focused learning circles.
 
-The platform enables: 
+The platform enables:
 
-* mentor-guided communities 
-* peer collaboration 
-* private/public learning circles 
-* discussions and resources 
-* role-based participation 
-* AI-inspired collaborative learning workflows 
+* 👨‍🏫 Mentor-guided communities
+* 🤝 Peer collaboration
+* 🔒 Private/Public learning circles
+* 💬 Discussions and resources
+* 👥 Role-based participation
+* 🧠 AI-inspired collaborative learning workflows
 
---- 
+---
 
-# Features 
+# ✨ Features
 
-## Authentication 
+## 🔐 Authentication
 
-* JWT Authentication 
-* Signup/Login 
-* Role selection (Student / Mentor) 
-* Profile management 
-* Protected routes 
+* JWT Authentication
+* Signup/Login
+* Role selection (Student / Mentor)
+* Profile management
+* Protected routes
 
---- 
+---
 
-## Circles System 
+## 🌐 Circles System
 
-* Public and Private circles 
-* Create circle 
-* Join circle 
-* Join request approval system 
-* Owner / Mentor / Member roles 
-* Leave circle 
-* Archive/Delete circle 
-* Ownership transfer logic 
+* Public and Private circles
+* Create circle
+* Join circle
+* Join request approval system
+* Owner / Mentor / Member roles
+* Leave circle
+* Archive/Delete circle
+* Ownership transfer logic
 
---- 
+---
 
-## Mentors & Peers 
+## 👨‍🏫 Mentors & Peers
 
-* Mentor discovery 
-* Peer collaboration 
-* Role-based rendering 
-* Clean participant filtering 
-* Duplicate prevention 
+* Mentor discovery
+* Peer collaboration
+* Role-based rendering
+* Clean participant filtering
+* Duplicate prevention
 
---- 
+---
 
-## Discussions 
+## 💬 Discussions
 
-* Circle-based discussions 
-* Real-time-ready architecture 
-* Private circle access control 
+* Circle-based discussions
+* Real-time-ready architecture
+* Private circle access control
 
---- 
+---
 
-## Profile System 
+## 👤 Profile System
 
-* Editable profile 
-* Profile image upload 
-* Skills & interests 
-* Learning goals 
-* Mentor expertise 
+* Editable profile
+* Profile image upload
+* Skills & interests
+* Learning goals
+* Mentor expertise
 
---- 
+---
 
-# Tech Stack 
+# 🛠️ Tech Stack
 
-## Frontend 
+## 🎨 Frontend
 
-* React.js 
-* React Router 
-* Tailwind CSS 
-* Axios 
-* React Hot Toast 
-* Lucide Icons 
+* React.js
+* React Router
+* Tailwind CSS
+* Axios
+* React Hot Toast
+* Lucide Icons
 
---- 
+---
 
-## Backend 
+## ⚙️ Backend
 
-* Django 
-* Django REST Framework 
-* JWT Authentication 
-* SQLite/PostgreSQL 
-* DRF Pagination 
+* Django
+* Django REST Framework
+* JWT Authentication
+* SQLite/PostgreSQL
+* DRF Pagination
 
---- 
+---
 
-# Project Structure 
+# 📁 Project Structure
 
-## Frontend 
+## 🎨 Frontend
 
-```bash 
-frontend/ 
-├── src/ 
-│   ├── api/ 
-│   ├── components/ 
-│   ├── context/ 
-│   ├── layouts/ 
-│   ├── pages/ 
-│   ├── routes/ 
-│   ├── services/ 
-│   └── utils/ 
-``` 
+```bash
+frontend/
+├── src/
+│   ├── api/
+│   ├── components/
+│   ├── context/
+│   ├── layouts/
+│   ├── pages/
+│   ├── routes/
+│   ├── services/
+│   └── utils/
+```
 
-## Backend 
+## ⚙️ Backend
 
-```bash 
-backend/ 
-├── users/ 
-├── circles/ 
-├── mentors/ 
-├── discussions/ 
-├── ai_engine/ 
-└── backend/ 
-``` 
+```bash
+backend/
+├── users/
+├── circles/
+├── mentors/
+├── discussions/
+├── ai_engine/
+└── backend/
+```
 
---- 
+---
 
-# Setup Instructions 
+# 🚀 Setup Instructions
 
-## Clone Repository 
+## 📥 Clone Repository
 
-```bash 
-git clone <repo-url> 
-cd MentorCircle 
-``` 
+```bash
+git clone <repo-url>
+cd MentorCircle
+```
 
---- 
+---
 
-## Environment Setup 
-
-First, create environment files:
+## 🔧 Environment Setup
 
 ### Backend
-Copy `backend/.env.example` to `backend/.env` and update as needed:
+
 ```bash
 cd backend
 cp .env.example .env
 ```
 
 ### Frontend
-Copy `frontend/.env.example` to `frontend/.env` and update as needed:
+
 ```bash
 cd frontend
 cp .env.example .env
 ```
 
---- 
+---
 
-## Backend Setup 
+## ⚙️ Backend Setup
 
-```bash 
-cd backend 
+```bash
+cd backend
 
-# Create virtual environment
-python -m venv venv 
+python -m venv venv
 
-# Windows 
-venv\Scripts\activate 
+# Windows
+venv\Scripts\activate
 
 # macOS/Linux
 source venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt 
+pip install -r requirements.txt
 
-# Run migrations
-python manage.py migrate 
+python manage.py migrate
 
-# Start server
-python manage.py runserver 
-``` 
+python manage.py runserver
+```
 
-Backend runs on: 
-```bash 
-http://127.0.0.1:8000 
-``` 
+Backend:
 
---- 
+```bash
+http://127.0.0.1:8000
+```
 
-## Frontend Setup 
+---
 
-```bash 
-cd frontend 
+## 🎨 Frontend Setup
 
-# Install dependencies
-npm install 
+```bash
+cd frontend
 
-# Start development server
-npm run dev 
-``` 
+npm install
 
-Frontend runs on: 
-```bash 
-http://localhost:5173 
-``` 
+npm run dev
+```
 
---- 
+Frontend:
 
-# API Documentation 
+```bash
+http://localhost:5173
+```
 
-Swagger: 
-```bash 
-/api/docs/ 
-``` 
+---
 
-Redoc: 
-```bash 
-/api/redoc/ 
-``` 
+# 📚 API Documentation
 
---- 
+### Swagger
 
-# Main API Endpoints 
+```bash
+/api/docs/
+```
 
-## Authentication 
+### Redoc
 
-```bash 
-/api/auth/signup/ 
-/api/auth/login/ 
-/api/auth/profile/ 
-/api/auth/logout/ 
-``` 
+```bash
+/api/redoc/
+```
 
-## Circles 
+---
 
-```bash 
-/api/circles/ 
-/api/circles/<id>/ 
-/api/circles/create/ 
-/api/circles/join/ 
-/api/circles/leave/ 
-``` 
+# 🔗 Main API Endpoints
 
---- 
+## 🔐 Authentication
 
-# Role Hierarchy 
+```bash
+/api/auth/signup/
+/api/auth/login/
+/api/auth/profile/
+/api/auth/logout/
+```
 
-## Owner 
+## 🌐 Circles
 
-* manages circle 
-* accepts requests 
-* archives circles 
-* transfers ownership 
+```bash
+/api/circles/
+/api/circles/<id>/
+/api/circles/create/
+/api/circles/join/
+/api/circles/leave/
+```
 
-## Mentor 
+---
 
-* guides learners 
-* participates in discussions 
+# 👥 Role Hierarchy
 
-## Member 
+## 👑 Owner
 
-* joins circles 
-* collaborates with peers 
+* Manages circle
+* Accepts requests
+* Archives circles
+* Transfers ownership
 
---- 
+## 🎯 Mentor
 
-# UI Theme 
+* Guides learners
+* Participates in discussions
 
-* Navy Blue + White SaaS theme 
-* Rounded modern cards 
-* Responsive layouts 
-* Minimal clean interface 
+## 👤 Member
 
---- 
+* Joins circles
+* Collaborates with peers
 
-# Important System Behaviors 
+---
 
-* Soft delete architecture 
-* Duplicate participant prevention 
-* Private circle request approval flow 
-* Ownership transfer logic 
-* Role-based rendering consistency 
-* Pagination support 
+# 🎨 UI Theme
 
---- 
+* 🔵 Navy Blue + White SaaS theme
+* 🪟 Rounded modern cards
+* 📱 Responsive layouts
+* ✨ Minimal clean interface
 
-# Future Improvements 
+---
 
-* WebSockets discussions 
-* Notifications 
-* AI recommendations 
-* Resource sharing 
-* Live collaboration 
-* Circle analytics 
+# ⚡ Important System Behaviors
 
---- 
+* Soft delete architecture
+* Duplicate participant prevention
+* Private circle approval flow
+* Ownership transfer logic
+* Role-based rendering consistency
+* Pagination support
 
-# Author 
+---
+
+# ❤️ Author
 
 Built for collaborative STEM learning and mentor-driven communities.
