@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
-import { Loader2, Sparkles, CheckCircle2, Target, Code, Heart, Clock } from "lucide-react";
-import { motion } from "framer-motion";
-import { API_BASE_URL } from "../api/axios";
-import axios from "axios";
+import { Loader2, Sparkles, CheckCircle2, Target, Code, Heart, Clock, AlertCircle, Terminal } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import axiosInstance from "../api/axios";
 
 const AIRecommendations = () => {
   const { user } = useAuth();
@@ -14,6 +13,8 @@ const AIRecommendations = () => {
   const [history, setHistory] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [errorDetails, setErrorDetails] = useState(null);
+  const [showLogs, setShowLogs] = useState(false);
 
   // Fetch user profile on mount
   useEffect(() => {
@@ -23,10 +24,7 @@ const AIRecommendations = () => {
 
   const fetchUserProfile = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await axios.get(`${API_BASE_URL}/auth/userprofile/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axiosInstance.get("/auth/userprofile/");
       setUserProfile(response.data);
     } catch (error) {
       console.error("Failed to fetch profile:", error);
@@ -36,11 +34,9 @@ const AIRecommendations = () => {
   const fetchLatestRoadmap = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("access_token");
-      const response = await axios.get(`${API_BASE_URL}/ai/roadmap/latest/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axiosInstance.get("/ai/roadmap/latest/");
       setCurrentRoadmap(response.data);
+      setErrorDetails(null);
     } catch (error) {
       if (error.response?.status === 404) {
         setCurrentRoadmap(null);
@@ -52,45 +48,52 @@ const AIRecommendations = () => {
 
   const fetchRoadmapHistory = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await axios.get(`${API_BASE_URL}/ai/roadmap/history/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axiosInstance.get("/ai/roadmap/history/");
       setHistory(response.data.roadmaps || []);
       setShowHistory(true);
     } catch (error) {
-      toast.error("Failed to fetch roadmap history");
+      handleError(error, "Failed to fetch roadmap history");
     }
+  };
+
+  const handleError = (error, defaultMessage) => {
+    const errorData = {
+      message: error.response?.data?.error || error.response?.data?.message || defaultMessage,
+      details: error.response?.data?.details || error.message,
+      status: error.response?.status,
+      timestamp: new Date().toLocaleString()
+    };
+    setErrorDetails(errorData);
+    console.error("API Error:", errorData);
+    toast.error(errorData.message);
   };
 
   const generateRoadmap = async () => {
     try {
       setGenerating(true);
+      setErrorDetails(null);
+      setShowLogs(true);
 
       // Validate profile
       if (!userProfile?.interests || !userProfile?.learning_goals) {
-        toast.error(
-          "Please complete your profile (interests & learning goals) before generating a roadmap."
-        );
+        const error = {
+          message: "Please complete your profile (interests & learning goals) before generating a roadmap.",
+          details: "Missing required profile fields",
+          timestamp: new Date().toLocaleString()
+        };
+        setErrorDetails(error);
+        toast.error(error.message);
         setGenerating(false);
         return;
       }
 
-      const token = localStorage.getItem("access_token");
-      const response = await axios.post(
-        `${API_BASE_URL}/ai/roadmap/generate/`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axiosInstance.post("/ai/roadmap/generate/", {});
 
       setCurrentRoadmap(response.data);
       toast.success("Roadmap generated successfully!");
+      setShowLogs(false);
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.error || "Failed to generate roadmap";
-      toast.error(errorMessage);
+      handleError(error, "Failed to generate roadmap");
     } finally {
       setGenerating(false);
     }
@@ -99,7 +102,12 @@ const AIRecommendations = () => {
   const loadRoadmapFromHistory = (roadmap) => {
     setCurrentRoadmap(roadmap);
     setShowHistory(false);
+    setErrorDetails(null);
     toast.success("Roadmap loaded");
+  };
+
+  const clearError = () => {
+    setErrorDetails(null);
   };
 
   if (loading) {
@@ -171,11 +179,11 @@ const AIRecommendations = () => {
       )}
 
       {/* Generate Roadmap Button */}
-      <div className="text-center">
+      <div className="text-center space-y-4">
         <button
           onClick={generateRoadmap}
           disabled={generating}
-          className="px-8 py-4 bg-royal text-white text-lg font-semibold rounded-lg hover:bg-darkblue transition-all flex items-center gap-3 mx-auto disabled:opacity-70"
+          className="px-8 py-4 bg-royal text-white text-lg font-semibold rounded-lg hover:bg-darkblue transition-all flex items-center gap-3 mx-auto disabled:opacity-70 shadow-lg shadow-royal/30"
         >
           {generating ? (
             <>
@@ -189,10 +197,62 @@ const AIRecommendations = () => {
             </>
           )}
         </button>
+
+        {errorDetails && (
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => setShowLogs(!showLogs)}
+              className="text-royal hover:underline font-semibold text-sm flex items-center gap-2"
+            >
+              <Terminal className="w-4 h-4" />
+              {showLogs ? "Hide Details" : "Show Error Details"}
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* Error Details */}
+      <AnimatePresence>
+        {errorDetails && showLogs && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-soft"
+          >
+            <div className="flex items-start gap-4">
+              <AlertCircle className="w-8 h-8 text-red-600 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-red-800">Error Occurred</h3>
+                  <button
+                    onClick={clearError}
+                    className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                  >
+                    Close
+                  </button>
+                </div>
+                <p className="text-red-800 font-semibold mb-2">{errorDetails.message}</p>
+                {errorDetails.status && (
+                  <p className="text-sm text-red-700 mb-2">Status Code: {errorDetails.status}</p>
+                )}
+                {errorDetails.timestamp && (
+                  <p className="text-xs text-red-600 mb-3">{errorDetails.timestamp}</p>
+                )}
+                {errorDetails.details && (
+                  <div className="bg-white rounded-lg p-4 border border-red-200">
+                    <h4 className="text-sm font-bold text-red-800 mb-2">Details:</h4>
+                    <p className="text-sm text-red-700 whitespace-pre-wrap font-mono">{errorDetails.details}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Current Roadmap */}
-      {currentRoadmap && (
+      {currentRoadmap && !errorDetails && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -333,7 +393,7 @@ const AIRecommendations = () => {
       )}
 
       {/* No Roadmap Message */}
-      {!currentRoadmap && !generating && (
+      {!currentRoadmap && !generating && !errorDetails && (
         <div className="rounded-2xl border border-borderline bg-appbg p-12 text-center">
           <Sparkles className="w-12 h-12 text-royal mx-auto mb-4 opacity-50" />
           <h3 className="text-xl font-bold text-navy mb-2">No Roadmap Generated Yet</h3>
@@ -344,7 +404,7 @@ const AIRecommendations = () => {
       )}
 
       {/* Roadmap History Button */}
-      {!showHistory && (
+      {!showHistory && !errorDetails && (
         <div className="text-center">
           <button
             onClick={fetchRoadmapHistory}

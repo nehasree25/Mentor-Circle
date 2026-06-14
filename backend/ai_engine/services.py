@@ -1,8 +1,12 @@
 import json
+import logging
+import traceback
 from decouple import config
 from django.conf import settings
 from users.models import UserProfile
 from groq import Groq
+
+logger = logging.getLogger(__name__)
 
 class RoadmapGeneratorService:
     """Service for generating AI-powered learning roadmaps using Groq API"""
@@ -11,27 +15,39 @@ class RoadmapGeneratorService:
         # Initialize Groq client from environment using decouple
         self.api_key = config('GROQ_API_KEY', default=None)
         if not self.api_key:
-            raise ValueError("GROQ_API_KEY environment variable not set. Add it to your .env file.")
+            error_msg = "GROQ_API_KEY environment variable not set. Add it to your .env file."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
         
-        self.client = Groq(api_key=self.api_key)
-        self.model_primary = "llama-3.3-70b-versatile"
-        self.model_fallback = "llama-3.1-8b-instant"
+        try:
+            self.client = Groq(api_key=self.api_key)
+            self.model_primary = "llama-3.3-70b-versatile"
+            self.model_fallback = "llama-3.1-8b-instant"
+            logger.info("Successfully initialized Groq client")
+        except Exception as e:
+            logger.error(f"Failed to initialize Groq client: {str(e)}")
+            logger.error(traceback.format_exc())
+            raise
     
     def collect_user_profile_data(self, user):
         """Collect user profile data for roadmap generation"""
         try:
             profile = UserProfile.objects.get(user=user)
+            return {
+                'role': profile.role,
+                'interests': profile.interests or "General STEM",
+                'skills': profile.skills or "Basic programming",
+                'learning_goals': profile.learning_goals or "Skill development",
+                'experience_level': profile.experience_level,
+                'domain': profile.domain or "Computer Science",
+            }
         except UserProfile.DoesNotExist:
+            logger.warning(f"UserProfile not found for user {user.id}")
             return None
-        
-        return {
-            'role': profile.role,
-            'interests': profile.interests or "General STEM",
-            'skills': profile.skills or "Basic programming",
-            'learning_goals': profile.learning_goals or "Skill development",
-            'experience_level': profile.experience_level,
-            'domain': profile.domain or "Computer Science",
-        }
+        except Exception as e:
+            logger.error(f"Error collecting user profile data: {str(e)}")
+            logger.error(traceback.format_exc())
+            raise
     
     def validate_profile_data(self, profile_data):
         """Validate that profile has sufficient data for roadmap generation"""
@@ -252,6 +268,8 @@ Remember: This roadmap should reflect how a real {domain} mentor would guide thi
         if model is None:
             model = self.model_primary
         
+        logger.info(f"Calling Groq API with model: {model}")
+        
         try:
             response = self.client.chat.completions.create(
                 model=model,
@@ -272,16 +290,21 @@ Remember: This roadmap should reflect how a real {domain} mentor would guide thi
             response_text = response.choices[0].message.content
             
             if not response_text:
+                logger.error("Empty response from Groq API")
                 raise Exception("Empty response from Groq API")
             
+            logger.info(f"Received successful response from Groq API")
             return response_text
         
         except Exception as e:
+            logger.error(f"Error calling Groq API (model: {model}): {str(e)}")
+            logger.error(traceback.format_exc())
+            
             # If primary model fails, try fallback
             if model == self.model_primary:
                 error_str = str(e).lower()
                 if any(keyword in error_str for keyword in ['timeout', 'rate_limit', '429', 'unavailable']):
-                    # Automatically retry with fallback model
+                    logger.warning(f"Primary model failed, trying fallback model: {self.model_fallback}")
                     return self.call_groq_api(system_prompt, user_prompt, model=self.model_fallback)
             
             raise Exception(f"Groq API error: {str(e)}")
@@ -289,6 +312,8 @@ Remember: This roadmap should reflect how a real {domain} mentor would guide thi
     def parse_response(self, response_text):
         """Parse AI response to extract JSON roadmap, handling markdown code blocks"""
         import re
+        
+        logger.info("Parsing AI response")
         
         try:
             # First, try to find JSON within markdown code blocks (```json ... ```)
@@ -301,16 +326,26 @@ Remember: This roadmap should reflect how a real {domain} mentor would guide thi
                 if json_match:
                     json_str = json_match.group(0)
                 else:
+                    logger.error("No JSON found in AI response")
                     raise ValueError("No JSON found in response")
             
             roadmap_data = json.loads(json_str)
+            logger.info("Successfully parsed AI response as JSON")
             return roadmap_data
         
         except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse AI response as JSON: {str(e)}")
+            logger.error(f"Raw response text: {response_text}")
             raise ValueError(f"Failed to parse AI response as JSON: {str(e)}")
+        except Exception as e:
+            logger.error(f"Error parsing AI response: {str(e)}")
+            logger.error(traceback.format_exc())
+            raise
     
     def generate_roadmap(self, user):
         """Main method to generate complete learning roadmap"""
+        logger.info(f"Starting roadmap generation for user: {user.id}")
+        
         try:
             # Collect user profile data
             profile_data = self.collect_user_profile_data(user)
@@ -318,6 +353,7 @@ Remember: This roadmap should reflect how a real {domain} mentor would guide thi
             # Validate profile data
             is_valid, message = self.validate_profile_data(profile_data)
             if not is_valid:
+                logger.warning(f"Profile validation failed: {message}")
                 return {"success": False, "error": message}
             
             # Generate domain-specific system prompt
@@ -333,12 +369,16 @@ Remember: This roadmap should reflect how a real {domain} mentor would guide thi
             # Parse response
             roadmap_data = self.parse_response(response_text)
             
+            logger.info(f"Successfully generated roadmap for user: {user.id}")
+            
             return {
                 "success": True,
                 "roadmap": roadmap_data
             }
         
         except Exception as e:
+            logger.error(f"Error generating roadmap for user {user.id}: {str(e)}")
+            logger.error(traceback.format_exc())
             return {
                 "success": False,
                 "error": f"Failed to generate roadmap: {str(e)}"

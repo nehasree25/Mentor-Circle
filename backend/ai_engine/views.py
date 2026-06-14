@@ -1,3 +1,5 @@
+import logging
+import traceback
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -6,6 +8,8 @@ from django.shortcuts import get_object_or_404
 from .models import GeneratedRoadmap
 from .serializers import GeneratedRoadmapSerializer, RoadmapResponseSerializer
 from .services import RoadmapGeneratorService
+
+logger = logging.getLogger(__name__)
 
 
 class AIEngineViewSet(viewsets.ModelViewSet):
@@ -24,6 +28,8 @@ class AIEngineViewSet(viewsets.ModelViewSet):
         
         POST /api/ai/roadmap/generate/
         """
+        logger.info(f"Roadmap generation request received from user: {request.user.id}")
+        
         try:
             # Initialize roadmap generator service
             service = RoadmapGeneratorService()
@@ -32,6 +38,7 @@ class AIEngineViewSet(viewsets.ModelViewSet):
             result = service.generate_roadmap(request.user)
             
             if not result['success']:
+                logger.warning(f"Roadmap generation failed for user {request.user.id}: {result['error']}")
                 return Response(
                     {"error": result['error']},
                     status=status.HTTP_400_BAD_REQUEST
@@ -50,11 +57,21 @@ class AIEngineViewSet(viewsets.ModelViewSet):
             
             # Return serialized roadmap
             serializer = self.get_serializer(roadmap)
+            logger.info(f"Roadmap successfully generated and saved for user: {request.user.id}, roadmap_id: {roadmap.id}")
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
-        except Exception as e:
+        except ValueError as e:
+            logger.error(f"ValueError during roadmap generation for user {request.user.id}: {str(e)}")
+            logger.error(traceback.format_exc())
             return Response(
-                {"error": f"Failed to generate roadmap: {str(e)}"},
+                {"error": "Roadmap generation failed", "details": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error during roadmap generation for user {request.user.id}: {str(e)}")
+            logger.error(traceback.format_exc())
+            return Response(
+                {"error": "Roadmap generation failed", "details": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
@@ -64,16 +81,27 @@ class AIEngineViewSet(viewsets.ModelViewSet):
         
         GET /api/ai/roadmap/latest/
         """
-        roadmap = self.get_queryset().first()
-        
-        if not roadmap:
+        logger.info(f"Latest roadmap request received from user: {request.user.id}")
+        try:
+            roadmap = self.get_queryset().first()
+            
+            if not roadmap:
+                logger.info(f"No roadmap found for user: {request.user.id}")
+                return Response(
+                    {"message": "No roadmap generated yet"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            serializer = self.get_serializer(roadmap)
+            logger.info(f"Returning latest roadmap for user: {request.user.id}, roadmap_id: {roadmap.id}")
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Error fetching latest roadmap for user {request.user.id}: {str(e)}")
+            logger.error(traceback.format_exc())
             return Response(
-                {"message": "No roadmap generated yet"},
-                status=status.HTTP_404_NOT_FOUND
+                {"error": "Failed to fetch latest roadmap", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
-        serializer = self.get_serializer(roadmap)
-        return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def history(self, request):
@@ -81,12 +109,22 @@ class AIEngineViewSet(viewsets.ModelViewSet):
         
         GET /api/ai/roadmap/history/
         """
-        roadmaps = self.get_queryset()
-        serializer = self.get_serializer(roadmaps, many=True)
-        return Response({
-            "count": roadmaps.count(),
-            "roadmaps": serializer.data
-        })
+        logger.info(f"Roadmap history request received from user: {request.user.id}")
+        try:
+            roadmaps = self.get_queryset()
+            serializer = self.get_serializer(roadmaps, many=True)
+            logger.info(f"Returning {roadmaps.count()} roadmaps for user: {request.user.id}")
+            return Response({
+                "count": roadmaps.count(),
+                "roadmaps": serializer.data
+            })
+        except Exception as e:
+            logger.error(f"Error fetching roadmap history for user {request.user.id}: {str(e)}")
+            logger.error(traceback.format_exc())
+            return Response(
+                {"error": "Failed to fetch roadmap history", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     @action(detail=True, methods=['get'])
     def retrieve_roadmap(self, request, pk=None):
@@ -94,6 +132,16 @@ class AIEngineViewSet(viewsets.ModelViewSet):
         
         GET /api/ai/roadmap/{id}/
         """
-        roadmap = get_object_or_404(GeneratedRoadmap, id=pk, user=request.user)
-        serializer = self.get_serializer(roadmap)
-        return Response(serializer.data)
+        logger.info(f"Retrieve roadmap request received from user: {request.user.id}, roadmap_id: {pk}")
+        try:
+            roadmap = get_object_or_404(GeneratedRoadmap, id=pk, user=request.user)
+            serializer = self.get_serializer(roadmap)
+            logger.info(f"Returning roadmap for user: {request.user.id}, roadmap_id: {pk}")
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Error retrieving roadmap {pk} for user {request.user.id}: {str(e)}")
+            logger.error(traceback.format_exc())
+            return Response(
+                {"error": "Failed to retrieve roadmap", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
