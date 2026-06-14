@@ -16,6 +16,7 @@ import {
 import { circleService } from "../services/circleService";
 import CreateCircleModal from "../components/CreateCircleModal";
 import Pagination from "../components/common/Pagination";
+import { PageHeader } from "../components/common/PageHeader";
 
 const Circles = () => {
   const navigate = useNavigate();
@@ -115,21 +116,19 @@ const Circles = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-bold text-navy">Learning Circles</h1>
-          <p className="text-textsecondary text-lg mt-2">
-            Join collaborative STEM learning communities
-          </p>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 bg-royal text-white px-6 py-3 rounded-xl font-semibold hover:bg-darkblue transition-all shadow-soft"
-        >
-          <Plus size={20} />
-          Create Circle
-        </button>
-      </div>
+      <PageHeader 
+        title="Learning Circles" 
+        subtitle="Join collaborative STEM learning communities"
+        actions={
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 bg-royal text-white px-6 py-3 rounded-xl font-semibold hover:bg-darkblue transition-all shadow-soft"
+          >
+            <Plus size={20} />
+            Create Circle
+          </button>
+        }
+      />
 
       {/* Filters */}
       <div className="rounded-3xl border border-borderline bg-white p-6 shadow-soft">

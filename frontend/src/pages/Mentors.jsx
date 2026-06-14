@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import ProfileDrawer from "../components/common/ProfileDrawer";
 import axios from "../api/axios";
 import { Search, ChevronLeft, ChevronRight, X, Loader2, Check } from "lucide-react";
+import { PageHeader } from "../components/common/PageHeader";
 
 const normalize = (data) => (Array.isArray(data) ? data : data?.results || []);
 
@@ -337,39 +338,10 @@ const Mentors = () => {
       {/* ========================================================================
             Hero
       ======================================================================== */}
-      <div className="flex items-center justify-between mb-6 bg-white rounded-2xl border border-gray-200 shadow-sm px-8 py-6 overflow-hidden relative">
-        <div className="z-10">
-          <h1 className="text-3xl font-bold text-navy mb-1">Discover Mentors</h1>
-          <p className="text-gray-500 text-sm max-w-sm">
-            Learn from experienced mentors and accelerate your growth.
-          </p>
-        </div>
-        {/* Decorative illustration */}
-        <div className="hidden md:flex items-center gap-2 opacity-80">
-          <svg width="180" height="100" viewBox="0 0 180 100" fill="none">
-            <circle cx="60" cy="50" r="38" fill="#EFF6FF"/>
-            <circle cx="130" cy="50" r="30" fill="#DBEAFE"/>
-            {/* Person 1 */}
-            <circle cx="55" cy="34" r="10" fill="#93C5FD"/>
-            <rect x="40" y="46" width="30" height="22" rx="8" fill="#3B82F6"/>
-            {/* Laptop */}
-            <rect x="44" y="58" width="22" height="12" rx="2" fill="#1D4ED8"/>
-            <rect x="42" y="69" width="26" height="2" rx="1" fill="#93C5FD"/>
-            {/* Person 2 */}
-            <circle cx="132" cy="36" r="9" fill="#BFDBFE"/>
-            <rect x="118" y="47" width="28" height="20" rx="7" fill="#60A5FA"/>
-            {/* Star */}
-            <polygon points="160,15 162,21 168,21 163,25 165,31 160,27 155,31 157,25 152,21 158,21" fill="#3B82F6"/>
-            {/* Lines */}
-            <line x1="80" y1="38" x2="105" y2="30" stroke="#93C5FD" strokeWidth="1.5" strokeDasharray="3,2"/>
-            <line x1="80" y1="48" x2="105" y2="52" stroke="#93C5FD" strokeWidth="1.5" strokeDasharray="3,2"/>
-            {/* Plant */}
-            <rect x="162" y="72" width="4" height="16" rx="2" fill="#86EFAC"/>
-            <ellipse cx="159" cy="68" rx="6" ry="8" fill="#4ADE80" transform="rotate(-20 159 68)"/>
-            <ellipse cx="169" cy="65" rx="5" ry="7" fill="#22C55E" transform="rotate(20 169 65)"/>
-          </svg>
-        </div>
-      </div>
+      <PageHeader 
+        title="Discover Mentors" 
+        subtitle="Learn from experienced mentors and accelerate your growth."
+      />
 
       {/* ========================================================================
             Filters

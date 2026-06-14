@@ -4,6 +4,7 @@ import { PeerDetailsModal } from "../components/peers/PeerDetailsModal";
 import axios from "../api/axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { PageHeader } from "../components/common/PageHeader";
 
 // Icons matching the design
 const PeopleIcon = ({ className = "", size = 20 }) => (
@@ -222,12 +223,10 @@ export function PeerDiscovery() {
     <div className="bg-gray-50">
       <div>
         {/* Header */}
-        <div className="mb-3">
-          <h1 className="text-2xl font-bold text-navy">Peers</h1>
-          <p className="text-sm text-textsecondary mt-0.5">
-            Discover and connect with learners
-          </p>
-        </div>
+        <PageHeader 
+          title="Peers" 
+          subtitle="Discover and connect with learners" 
+        />
 
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-4 mb-3">

@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { Loader2, Sparkles, CheckCircle2, Target, Code, Heart, Clock, AlertCircle, Terminal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import axiosInstance from "../api/axios";
+import { PageHeader } from "../components/common/PageHeader";
 
 const AIRecommendations = () => {
   const { user } = useAuth();
@@ -121,15 +122,10 @@ const AIRecommendations = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <Sparkles className="w-8 h-8 text-royal" />
-          <h1 className="text-4xl font-bold text-navy">AI Learning Roadmap</h1>
-        </div>
-        <p className="text-textsecondary">
-          Generate a personalized STEM learning pathway based on your goals and experience.
-        </p>
-      </div>
+      <PageHeader 
+        title="AI Learning Roadmap"
+        subtitle="Generate a personalized STEM learning pathway based on your goals and experience." 
+      />
 
       {/* Profile Summary Card */}
       {userProfile && (
