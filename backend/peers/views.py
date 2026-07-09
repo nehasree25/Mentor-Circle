@@ -110,17 +110,14 @@ class PeerViewSet(viewsets.ReadOnlyModelViewSet):
 
         total_peers = all_peers.count()
 
-        # Shared circles: sum of per-peer common circle counts (matches what each peer card shows)
-        shared_circles_count = 0
-        for peer in all_peers:
-            count = Circle.objects.filter(
-                Q(members=user) | Q(created_by=user)
-            ).filter(
-                Q(members=peer) | Q(created_by=peer)
-            ).filter(
-                is_active=True, is_deleted=False
-            ).distinct().count()
-            shared_circles_count += count
+        # Shared circles: total distinct circles shared between current user and any peer
+        shared_circles_count = Circle.objects.filter(
+            Q(members=user) | Q(created_by=user)
+        ).filter(
+            Q(members__in=all_peers) | Q(created_by__in=all_peers)
+        ).filter(
+            is_active=True, is_deleted=False
+        ).distinct().count()
 
         # Common interests: sum across all peers
         user_interests = set(

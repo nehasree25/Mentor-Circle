@@ -85,10 +85,14 @@ export const authService = {
   // =========================
   // Logout
   // =========================
-  logout: () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("auth_user");
-    localStorage.removeItem("auth_profile");
+  logout: async (refreshToken) => {
+    try {
+      await axiosInstance.post("auth/logout/", { refresh: refreshToken });
+    } finally {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("auth_profile");
+    }
   },
 };

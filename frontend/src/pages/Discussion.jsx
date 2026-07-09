@@ -17,7 +17,11 @@ const Discussion = () => {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    fetchConversation();
+    if (conversationId) {
+      fetchConversation();
+    } else {
+      setLoading(false);
+    }
   }, [conversationId]);
 
   useEffect(() => {
@@ -53,7 +57,7 @@ const Discussion = () => {
     setSending(true);
     try {
       const response = await mentorshipService.sendMessage(conversationId, newMessage);
-      setMessages([...messages, response.message]);
+      setMessages([...messages, response.data]);
       setNewMessage("");
       toast.success("Message sent");
     } catch (error) {
@@ -68,6 +72,21 @@ const Discussion = () => {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <p className="text-textsecondary">Loading discussion...</p>
+      </div>
+    );
+  }
+
+  if (!conversationId) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <h2 className="text-2xl font-bold text-navy mb-2">No Conversation Selected</h2>
+        <p className="text-textsecondary mt-1">Select a conversation from your requests to start chatting.</p>
+        <button
+          onClick={() => navigate("/requests")}
+          className="text-royal font-semibold mt-4"
+        >
+          Go to Requests
+        </button>
       </div>
     );
   }

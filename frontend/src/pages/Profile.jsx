@@ -127,7 +127,15 @@ const Profile = () => {
     setEditing(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const refresh = localStorage.getItem("refresh_token");
+      if (refresh) {
+        await authService.logout(refresh);
+      }
+    } catch {
+      // Ignore server errors — clear session regardless
+    }
     clearSession();
     navigate("/login");
     toast.success("Logged out successfully!");
@@ -196,7 +204,7 @@ const Profile = () => {
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-3xl font-bold text-navy mb-2">
-                  {userData.first_name}
+                  {userData.first_name} {userData.last_name}
                 </h2>
                 
                 {/* Role Badge */}

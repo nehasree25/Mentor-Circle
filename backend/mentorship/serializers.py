@@ -301,8 +301,7 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
             return {
                 'role': profile.get_role_display(),
                 'bio': profile.bio,
-                'profile_picture': self.context['request'].build_absolute_uri(profile.profile_picture.url) if profile.profile_picture else None,
-                'domains': profile.domains,
+                'domain': profile.domain,
                 'skills': profile.skills,
                 'interests': profile.interests,
                 'learning_goals': profile.learning_goals,

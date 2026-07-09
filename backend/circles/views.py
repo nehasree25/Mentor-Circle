@@ -298,12 +298,20 @@ def join_circle(request, circle_id):
     
     else:
         # PRIVATE CIRCLE: Create join request
-        join_request = JoinRequest.objects.create(
+        # Use get_or_create scoped to pending status so rejected users can re-apply
+        join_request, created = JoinRequest.objects.get_or_create(
             user=user,
             circle=circle,
-            message=request.data.get('message', '')
+            status='pending',
+            defaults={'message': request.data.get('message', '')}
         )
-        
+
+        if not created:
+            return Response(
+                {'error': 'You already have a pending request for this circle'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         return Response({
             'message': 'Join request submitted! Awaiting creator approval.',
             'request_id': join_request.id,

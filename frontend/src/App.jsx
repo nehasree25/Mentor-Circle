@@ -10,6 +10,7 @@ import { PeerDiscovery } from "./pages/PeerDiscovery";
 import Profile from "./pages/Profile";
 import AIRecommendations from "./pages/AIRecommendations";
 import Requests from "./pages/Requests";
+import Discussion from "./pages/Discussion";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -30,6 +31,8 @@ const App = () => {
           <Route path="/peers" element={<PeerDiscovery />} />
           <Route path="/ai" element={<AIRecommendations />} />
           <Route path="/requests" element={<Requests />} />
+          <Route path="/conversations" element={<Discussion />} />
+          <Route path="/conversations/:conversationId" element={<Discussion />} />
           <Route path="/profile" element={<Profile />} />
         </Route>
       </Route>

@@ -66,7 +66,7 @@ def mentor_list(request):
             Q(username__icontains=search_query) |
             Q(first_name__icontains=search_query) |
             Q(last_name__icontains=search_query) |
-            Q(email__icontains=search_query)
+            Q(profile__mentorship_expertise__icontains=search_query)
         )
     
     # Expertise filter

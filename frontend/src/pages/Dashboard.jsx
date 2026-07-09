@@ -98,7 +98,7 @@ const Dashboard = () => {
         <StatCard
           icon={<BookOpen size={22} />}
           label="My Circles"
-          value={joinedCircles.length}
+          value={stats.joined_circles ?? joinedCircles.length}
         />
         <StatCard
           icon={<UserCheck size={22} />}

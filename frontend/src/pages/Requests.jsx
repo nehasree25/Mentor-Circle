@@ -338,19 +338,45 @@ const RequestsPanel = ({ currentUserId, type }) => {
 const Requests = () => {
   const { user, profile } = useAuth();
   const isMentor = profile?.role === "mentor";
+  const [activeTab, setActiveTab] = useState("received");
 
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
-      <PageHeader 
-        title="Requests" 
-        subtitle="Manage guidance requests." 
+      <PageHeader
+        title="Requests"
+        subtitle="Manage guidance requests."
       />
+
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-[#E2E8F0]">
+        <button
+          onClick={() => setActiveTab("received")}
+          className={`px-4 py-2 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+            activeTab === "received"
+              ? "border-[#1a56db] text-[#1a56db]"
+              : "border-transparent text-textsecondary hover:text-navy"
+          }`}
+        >
+          {isMentor ? "Received" : "Received"}
+        </button>
+        <button
+          onClick={() => setActiveTab("sent")}
+          className={`px-4 py-2 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+            activeTab === "sent"
+              ? "border-[#1a56db] text-[#1a56db]"
+              : "border-transparent text-textsecondary hover:text-navy"
+          }`}
+        >
+          Sent
+        </button>
+      </div>
 
       {/* Content */}
       <RequestsPanel
+        key={activeTab}
         currentUserId={user?.id}
-        type={isMentor ? "received" : "sent"}
+        type={activeTab}
       />
     </div>
   );

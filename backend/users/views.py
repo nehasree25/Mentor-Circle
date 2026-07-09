@@ -435,11 +435,12 @@ def profile_stats(request):
             role='mentor'
         ).count()
 
-        peer_collaborations = Circle.objects.filter(
-            members=user,
-            is_active=True,
-            is_deleted=False
-        ).count()  # Can be refined later
+        from mentorship.models import CollaborationRequest as MentorshipCollabRequest
+        from django.db.models import Q as DQ
+        peer_collaborations_count = MentorshipCollabRequest.objects.filter(
+            DQ(sender=user) | DQ(receiver=user),
+            status='accepted'
+        ).count()
 
         discussions_count = Discussion.objects.filter(
             user=user,
@@ -453,7 +454,7 @@ def profile_stats(request):
             'joined_circles': joined_circles_count,
             'mentor_circles': mentor_circles_count,
             'total_mentors': total_mentors_count,
-            'peer_collaborations': peer_collaborations,
+            'peer_collaborations': peer_collaborations_count,
             'discussions': discussions_count,
             'resources_shared': resources_shared
         }, status=status.HTTP_200_OK)

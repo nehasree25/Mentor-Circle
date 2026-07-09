@@ -535,9 +535,9 @@ class JoinRequest(models.Model):
         verbose_name = 'Join Request'
         verbose_name_plural = 'Join Requests'
         ordering = ['-created_at']
-        # Prevent duplicate requests (one per user per circle, regardless of status)
+        # One pending request per user per circle — but allow new requests after rejection
         unique_together = [
-            ('user', 'circle')
+            ('user', 'circle', 'status')
         ]
         indexes = [
             models.Index(fields=['user', 'circle']),

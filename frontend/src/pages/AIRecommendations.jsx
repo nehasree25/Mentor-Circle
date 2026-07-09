@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
-import { Loader2, Sparkles, CheckCircle2, Target, Code, Heart, Clock, AlertCircle, Terminal } from "lucide-react";
+import { Loader2, Sparkles, CheckCircle2, Target, Code, Clock, AlertCircle, Terminal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import axiosInstance from "../api/axios";
 import { PageHeader } from "../components/common/PageHeader";
 
 const AIRecommendations = () => {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [currentRoadmap, setCurrentRoadmap] = useState(null);
@@ -25,7 +23,7 @@ const AIRecommendations = () => {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await axiosInstance.get("/auth/userprofile/");
+      const response = await axiosInstance.get("auth/userprofile/");
       setUserProfile(response.data);
     } catch (error) {
       console.error("Failed to fetch profile:", error);
@@ -35,7 +33,7 @@ const AIRecommendations = () => {
   const fetchLatestRoadmap = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get("/ai/roadmap/latest/");
+      const response = await axiosInstance.get("ai/roadmap/latest/");
       setCurrentRoadmap(response.data);
       setErrorDetails(null);
     } catch (error) {
@@ -49,7 +47,7 @@ const AIRecommendations = () => {
 
   const fetchRoadmapHistory = async () => {
     try {
-      const response = await axiosInstance.get("/ai/roadmap/history/");
+      const response = await axiosInstance.get("ai/roadmap/history/");
       setHistory(response.data.roadmaps || []);
       setShowHistory(true);
     } catch (error) {
@@ -88,7 +86,7 @@ const AIRecommendations = () => {
         return;
       }
 
-      const response = await axiosInstance.post("/ai/roadmap/generate/", {});
+      const response = await axiosInstance.post("ai/roadmap/generate/", {});
 
       setCurrentRoadmap(response.data);
       toast.success("Roadmap generated successfully!");
@@ -148,7 +146,11 @@ const AIRecommendations = () => {
             </div>
             <div>
               <p className="text-sm text-textsecondary mb-1">Status</p>
-              <p className="font-semibold text-green-600">Profile Complete</p>
+              {userProfile.interests && userProfile.learning_goals ? (
+                <p className="font-semibold text-green-600">Profile Complete</p>
+              ) : (
+                <p className="font-semibold text-amber-500">Incomplete — add interests &amp; goals</p>
+              )}
             </div>
           </div>
 
@@ -156,7 +158,7 @@ const AIRecommendations = () => {
             <div>
               <p className="text-sm text-textsecondary mb-1">Interests</p>
               <div className="flex flex-wrap gap-2">
-                {(userProfile.interests || "").split(",").map((interest, idx) => (
+                {(userProfile.interests || "").split(",").filter(i => i.trim()).map((interest, idx) => (
                   <span
                     key={idx}
                     className="inline-block px-3 py-1 bg-softblue text-royal text-sm rounded-full"
@@ -164,6 +166,9 @@ const AIRecommendations = () => {
                     {interest.trim()}
                   </span>
                 ))}
+                {!(userProfile.interests || "").trim() && (
+                  <p className="text-textsecondary text-sm">No interests listed yet.</p>
+                )}
               </div>
             </div>
             <div>

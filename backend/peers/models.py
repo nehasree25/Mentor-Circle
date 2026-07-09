@@ -24,7 +24,8 @@ class CollaborationRequest(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("sender", "receiver")
+        # Only one pending request allowed per pair at a time,
+        # but users can re-send after rejection/cancellation.
         ordering = ["-created_at"]
 
     def __str__(self):
