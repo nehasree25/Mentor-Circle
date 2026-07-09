@@ -430,6 +430,11 @@ def profile_stats(request):
             is_deleted=False
         ).count()
 
+        total_mentors_count = UserProfile.objects.filter(
+            is_mentor=True,
+            role='mentor'
+        ).count()
+
         peer_collaborations = Circle.objects.filter(
             members=user,
             is_active=True,
@@ -447,6 +452,7 @@ def profile_stats(request):
         return Response({
             'joined_circles': joined_circles_count,
             'mentor_circles': mentor_circles_count,
+            'total_mentors': total_mentors_count,
             'peer_collaborations': peer_collaborations,
             'discussions': discussions_count,
             'resources_shared': resources_shared

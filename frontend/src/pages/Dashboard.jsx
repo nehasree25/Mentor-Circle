@@ -103,7 +103,7 @@ const Dashboard = () => {
         <StatCard
           icon={<UserCheck size={22} />}
           label="Mentors"
-          value={stats.mentor_circles ?? availableMentors.length}
+          value={stats.total_mentors ?? availableMentors.length}
         />
         <StatCard
           icon={<Users size={22} />}
