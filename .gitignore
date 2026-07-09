@@ -15,6 +15,11 @@ ENV/
 *.sqlite3
 *.db
 backend/.env
+
+MentorCircle.zip
+MentorCircle_Doc.docx
+MentorCircle_Images
+
 # Django Media Files
 backend/media/
 backend/profiles/
