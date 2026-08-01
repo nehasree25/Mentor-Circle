@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -103,35 +103,39 @@ class GuidanceRequest(models.Model):
         if self.status != 'pending':
             return False, "Request is not pending"
         
-        self.status = 'accepted'
-        self.responded_at = timezone.now()
-        self.save()
-        
-        # Add the mentor to the circle's mentors if not already there
-        can_add, reason = self.circle.can_add_mentor(self.mentor)
-        if can_add:
-            self.circle.mentors.add(self.mentor)
-        
-        # Handle adding the sender to the circle if needed
-        if self.circle.is_private:
-            # For private circles, add sender as member if not already a member
-            if not self.circle.is_member(self.sender) and not self.circle.is_mentor(self.sender) and not self.circle.is_creator(self.sender):
-                self.circle.members.add(self.sender)
-                # Auto-add as mentor if sender is a registered mentor
-                if hasattr(self.sender, 'profile') and self.sender.profile.role == 'mentor':
-                    can_add_sender, _ = self.circle.can_add_mentor(self.sender)
-                    if can_add_sender:
-                        self.circle.mentors.add(self.sender)
-        
-        # Create a guidance conversation
-        conversation = Conversation.objects.create(
-            conversation_type='guidance',
-            guidance_request=self,
-            circle=self.circle
-        )
-        conversation.participants.add(self.sender, self.mentor)
-        
-        return True, "Guidance request accepted and conversation created"
+        try:
+            with transaction.atomic():
+                self.status = 'accepted'
+                self.responded_at = timezone.now()
+                self.save()
+                
+                # Add the mentor to the circle's mentors if not already there
+                can_add, reason = self.circle.can_add_mentor(self.mentor)
+                if can_add:
+                    self.circle.mentors.add(self.mentor)
+                
+                # Handle adding the sender to the circle if needed
+                if self.circle.is_private:
+                    # For private circles, add sender as member if not already a member
+                    if not self.circle.is_member(self.sender) and not self.circle.is_mentor(self.sender) and not self.circle.is_creator(self.sender):
+                        self.circle.members.add(self.sender)
+                        # Auto-add as mentor if sender is a registered mentor
+                        if hasattr(self.sender, 'profile') and self.sender.profile.role == 'mentor':
+                            can_add_sender, _ = self.circle.can_add_mentor(self.sender)
+                            if can_add_sender:
+                                self.circle.mentors.add(self.sender)
+                
+                # Create a guidance conversation
+                conversation = Conversation.objects.create(
+                    conversation_type='guidance',
+                    guidance_request=self,
+                    circle=self.circle
+                )
+                conversation.participants.add(self.sender, self.mentor)
+                
+                return True, "Guidance request accepted and conversation created"
+        except Exception as e:
+            return False, f"Error accepting request: {str(e)}"
     
     def reject(self, rejection_reason=None):
         """Reject the guidance request with an optional reason."""
@@ -239,19 +243,23 @@ class CollaborationRequest(models.Model):
         if self.status != 'pending':
             return False, "Request is not pending"
         
-        self.status = 'accepted'
-        self.responded_at = timezone.now()
-        self.save()
-        
-        # Create a collaboration conversation
-        conversation = Conversation.objects.create(
-            conversation_type='collaboration',
-            collaboration_request=self,
-            circle=self.circle
-        )
-        conversation.participants.add(self.sender, self.receiver)
-        
-        return True, "Collaboration request accepted and conversation created"
+        try:
+            with transaction.atomic():
+                self.status = 'accepted'
+                self.responded_at = timezone.now()
+                self.save()
+                
+                # Create a collaboration conversation
+                conversation = Conversation.objects.create(
+                    conversation_type='collaboration',
+                    collaboration_request=self,
+                    circle=self.circle
+                )
+                conversation.participants.add(self.sender, self.receiver)
+                
+                return True, "Collaboration request accepted and conversation created"
+        except Exception as e:
+            return False, f"Error accepting request: {str(e)}"
     
     def reject(self):
         """Reject the collaboration request."""

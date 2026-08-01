@@ -47,38 +47,37 @@ def signup(request):
     Returns JWT access and refresh tokens on success.
     """
     
-    if request.method == 'POST':
-        logger.info(f"Signup request received from IP: {get_client_ip(request)}")
-        logger.debug(f"Signup request data: {request.data}")
+    logger.info(f"Signup request received from IP: {get_client_ip(request)}")
+    logger.debug(f"Signup request data: {request.data}")
+    
+    serializer = SignupSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        logger.info(f"Signup validation successful for user: {serializer.validated_data.get('username')}")
         
-        serializer = SignupSerializer(data=request.data)
+        # Create the user
+        user = serializer.save()
         
-        if serializer.is_valid():
-            logger.info(f"Signup validation successful for user: {serializer.validated_data.get('username')}")
-            
-            # Create the user
-            user = serializer.save()
-            
-            # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
-            
-            logger.info(f"User created successfully: {user.username} (ID: {user.id})")
-            
-            return Response({
-                'message': 'User registered successfully!',
-                'user': {
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                },
-                'access': str(refresh.access_token),
-                'refresh': str(refresh),
-            }, status=status.HTTP_201_CREATED)
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
         
-        logger.warning(f"Signup validation failed: {serializer.errors}")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        logger.info(f"User created successfully: {user.username} (ID: {user.id})")
+        
+        return Response({
+            'message': 'User registered successfully!',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+            },
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+        }, status=status.HTTP_201_CREATED)
+    
+    logger.warning(f"Signup validation failed: {serializer.errors}")
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def get_client_ip(request):

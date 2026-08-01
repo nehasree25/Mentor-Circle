@@ -37,9 +37,9 @@ from .permissions import (
 # ============================================================================
 
 def get_circle_or_404(circle_id):
-    """Safely retrieve a circle or return None."""
+    """Safely retrieve an active, non-deleted circle or return None."""
     try:
-        return Circle.objects.get(id=circle_id)
+        return Circle.objects.get(id=circle_id, is_active=True, is_deleted=False)
     except Circle.DoesNotExist:
         return None
 
@@ -297,16 +297,20 @@ def join_circle(request, circle_id):
         }, status=status.HTTP_200_OK)
     
     else:
-        # PRIVATE CIRCLE: Create join request
-        # Use get_or_create scoped to pending status so rejected users can re-apply
-        join_request, created = JoinRequest.objects.get_or_create(
+        # PRIVATE CIRCLE: Create or re-activate join request
+        # With unique_together=(user, circle), we use update_or_create so that
+        # a previously-rejected user can re-apply without hitting an IntegrityError.
+        join_request, created = JoinRequest.objects.update_or_create(
             user=user,
             circle=circle,
-            status='pending',
-            defaults={'message': request.data.get('message', '')}
+            defaults={
+                'status': 'pending',
+                'message': request.data.get('message', '')
+            }
         )
 
-        if not created:
+        # If it already existed as pending (not just updated from rejected), tell them
+        if not created and join_request.status == 'pending':
             return Response(
                 {'error': 'You already have a pending request for this circle'},
                 status=status.HTTP_400_BAD_REQUEST

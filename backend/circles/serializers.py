@@ -379,29 +379,34 @@ class JoinRequestCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         """
-        Create a join request.
+        Create or re-activate a join request.
         User and circle are set from context.
+        With unique_together=(user, circle), update_or_create is used so that
+        a previously-rejected user can re-apply cleanly.
         """
         user = self.context['request'].user
         circle = self.context['circle']
         
-        # Check for duplicate pending request
-        existing = JoinRequest.objects.filter(
+        # Check if there is already a pending request
+        existing_pending = JoinRequest.objects.filter(
             user=user,
             circle=circle,
             status='pending'
         ).first()
         
-        if existing:
+        if existing_pending:
             raise serializers.ValidationError(
                 "You already have a pending request for this circle."
             )
         
-        # Create join request
-        join_request = JoinRequest.objects.create(
+        # update_or_create handles both first-time apply and re-apply after rejection
+        join_request, _ = JoinRequest.objects.update_or_create(
             user=user,
             circle=circle,
-            **validated_data
+            defaults={
+                'status': 'pending',
+                'message': validated_data.get('message', ''),
+            }
         )
         
         return join_request

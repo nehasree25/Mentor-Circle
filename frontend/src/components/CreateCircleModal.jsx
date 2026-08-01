@@ -67,8 +67,10 @@ const CreateCircleModal = ({ onClose, onSuccess }) => {
       const errors = error?.response?.data;
       if (typeof errors === "string") {
         toast.error(errors);
-      } else {
+      } else if (errors && typeof errors === "object") {
         toast.error(Object.values(errors).flat().join(", "));
+      } else {
+        toast.error("Failed to create circle. Please try again.");
       }
     } finally {
       setLoading(false);

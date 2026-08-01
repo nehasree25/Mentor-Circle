@@ -93,7 +93,7 @@ export function PeerDiscovery() {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get(`/peers/stats/`);
+      const response = await axios.get(`peers/stats/`);
       setStats({
         totalPeers: response.data.total_peers,
         sharedCircles: response.data.shared_circles,
@@ -113,7 +113,7 @@ export function PeerDiscovery() {
       if (filters.interests) params.interests = filters.interests;
       if (filters.circles) params.circles = filters.circles;
 
-      const response = await axios.get(`/peers/`, { params });
+      const response = await axios.get(`peers/`, { params });
       const results = response.data.results || response.data;
       setPeers(Array.isArray(results) ? results : []);
 
@@ -512,18 +512,25 @@ export function PeerDiscovery() {
                         {/* Skill pills */}
                         <div className="flex flex-wrap gap-2">
                           {peer.profile?.skills && peer.profile.skills.length > 0 ? (
-                            <>
-                              {peer.profile.skills.slice(0, 4).map((skill, idx) => (
-                                <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full border border-gray-200">
-                                  {skill}
-                                </span>
-                              ))}
-                              {peer.profile.skills.length > 4 && (
-                                <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full border border-gray-200">
-                                  +{peer.profile.skills.length - 4}
-                                </span>
-                              )}
-                            </>
+                            (() => {
+                              const skillList = typeof peer.profile.skills === "string"
+                                ? peer.profile.skills.split(",").map(s => s.trim()).filter(Boolean)
+                                : peer.profile.skills;
+                              return (
+                                <>
+                                  {skillList.slice(0, 4).map((skill, idx) => (
+                                    <span key={idx} className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full border border-gray-200">
+                                      {skill}
+                                    </span>
+                                  ))}
+                                  {skillList.length > 4 && (
+                                    <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full border border-gray-200">
+                                      +{skillList.length - 4}
+                                    </span>
+                                  )}
+                                </>
+                              );
+                            })()
                           ) : (
                             <span className="text-xs text-gray-400">No skills listed</span>
                           )}
@@ -555,19 +562,30 @@ export function PeerDiscovery() {
                           <div className="flex items-start gap-2.5">
                             <HeartOutlineIcon className="text-red-400 flex-shrink-0 mt-0.5" size={16} />
                             <div>
-                              <p className="text-sm font-semibold text-navy leading-tight">
-                                {peer.profile?.common_interests?.length || 0} Common Interest{(peer.profile?.common_interests?.length || 0) !== 1 ? "s" : ""}
-                              </p>
-                              <p className="text-xs text-gray-400 mt-0.5">
-                                {peer.profile?.common_interests && peer.profile.common_interests.length > 0
-                                  ? (() => {
-                                      const first3 = peer.profile.common_interests.slice(0, 3).join(", ");
-                                      return peer.profile.common_interests.length > 3
-                                        ? `${first3} +${peer.profile.common_interests.length - 3}`
-                                        : first3;
-                                    })()
-                                  : "No shared interests yet"}
-                              </p>
+                              {(() => {
+                                // common_interests may be a computed array from peers API or a string from profile
+                                const raw = peer.profile?.common_interests;
+                                const interests = Array.isArray(raw)
+                                  ? raw
+                                  : typeof raw === "string" && raw.length > 0
+                                  ? raw.split(",").map(s => s.trim()).filter(Boolean)
+                                  : [];
+                                return (
+                                  <>
+                                    <p className="text-sm font-semibold text-navy leading-tight">
+                                      {interests.length} Common Interest{interests.length !== 1 ? "s" : ""}
+                                    </p>
+                                    <p className="text-xs text-gray-400 mt-0.5">
+                                      {interests.length > 0
+                                        ? (() => {
+                                            const first3 = interests.slice(0, 3).join(", ");
+                                            return interests.length > 3 ? `${first3} +${interests.length - 3}` : first3;
+                                          })()
+                                        : "No shared interests yet"}
+                                    </p>
+                                  </>
+                                );
+                              })()}
                             </div>
                           </div>
 
@@ -576,13 +594,22 @@ export function PeerDiscovery() {
                             <div>
                               <p className="text-sm font-semibold text-navy leading-tight">Recommended because</p>
                               <p className="text-xs text-gray-400 mt-0.5">
-                                {peer.common_circles_count >= 2
-                                  ? `You both are in ${peer.common_circles_count} same circles`
-                                  : (peer.profile?.common_interests?.length || 0) >= 1
-                                  ? `You both are interested in ${peer.profile.common_interests[0]}`
-                                  : peer.common_circles_count === 1 && peer.common_circles?.length > 0
-                                  ? `You both are in ${peer.common_circles[0].name} circle`
-                                  : "You share similar learning goals"}
+                                {(() => {
+                                  const raw = peer.profile?.common_interests;
+                                  const interests = Array.isArray(raw)
+                                    ? raw
+                                    : typeof raw === "string" && raw.length > 0
+                                    ? raw.split(",").map(s => s.trim()).filter(Boolean)
+                                    : [];
+                                  if (peer.common_circles_count >= 2) {
+                                    return `You both are in ${peer.common_circles_count} same circles`;
+                                  } else if (interests.length >= 1) {
+                                    return `You both are interested in ${interests[0]}`;
+                                  } else if (peer.common_circles_count === 1 && peer.common_circles?.length > 0) {
+                                    return `You both are in ${peer.common_circles[0].name} circle`;
+                                  }
+                                  return "You share similar learning goals";
+                                })()}
                               </p>
                             </div>
                           </div>

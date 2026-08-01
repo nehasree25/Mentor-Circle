@@ -163,7 +163,8 @@ class Circle(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.name} ({self.get_domain_display()}) - {self.members.count()} members"
+        # Avoid COUNT query in __str__ to prevent N+1 in admin/logging
+        return f"{self.name} ({self.get_domain_display()})"
     
     # ========================================================================
     # Validation Methods
@@ -535,9 +536,13 @@ class JoinRequest(models.Model):
         verbose_name = 'Join Request'
         verbose_name_plural = 'Join Requests'
         ordering = ['-created_at']
-        # One pending request per user per circle — but allow new requests after rejection
+        # Prevent duplicate pending requests per user per circle.
+        # Using only (user, circle) ensures a user can only ever have one
+        # active row per circle (pending, accepted, or rejected).
+        # The old (user, circle, status) constraint allowed multiple rows
+        # with different statuses, causing IntegrityError on second rejection.
         unique_together = [
-            ('user', 'circle', 'status')
+            ('user', 'circle')
         ]
         indexes = [
             models.Index(fields=['user', 'circle']),

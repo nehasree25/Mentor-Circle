@@ -57,7 +57,9 @@ const Discussion = () => {
     setSending(true);
     try {
       const response = await mentorshipService.sendMessage(conversationId, newMessage);
-      setMessages([...messages, response.data]);
+      // mentorshipService returns response.data which is { message: "...", data: { ...messageObject } }
+      const newMsg = response.data;
+      setMessages([...messages, newMsg]);
       setNewMessage("");
       toast.success("Message sent");
     } catch (error) {

@@ -144,10 +144,15 @@ def accept_guidance_request(request, request_id):
     
     if success:
         serializer = GuidanceRequestSerializer(guidance_request)
+        # Safely access conversation — it's created inside accept() atomically
+        try:
+            conversation_id = guidance_request.conversation.id
+        except Exception:
+            conversation_id = None
         return Response({
             'message': message,
             'request': serializer.data,
-            'conversation_id': guidance_request.conversation.id,
+            'conversation_id': conversation_id,
             'circle_id': guidance_request.circle.id,
             'circle_is_private': guidance_request.circle.is_private
         }, status=status.HTTP_200_OK)
@@ -309,10 +314,14 @@ def accept_collaboration_request(request, request_id):
     
     if success:
         serializer = CollaborationRequestSerializer(collaboration_request)
+        try:
+            conversation_id = collaboration_request.conversation.id
+        except Exception:
+            conversation_id = None
         return Response({
             'message': message,
             'request': serializer.data,
-            'conversation_id': collaboration_request.conversation.id
+            'conversation_id': conversation_id
         }, status=status.HTTP_200_OK)
     else:
         return Response({'error': message}, status=status.HTTP_400_BAD_REQUEST)

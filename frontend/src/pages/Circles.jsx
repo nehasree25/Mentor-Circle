@@ -70,7 +70,11 @@ const Circles = () => {
   };
 
   useEffect(() => {
-    fetchCircles();
+    const params = {};
+    if (search) params.search = search;
+    if (domain) params.domain = domain;
+    if (skillLevel) params.skill_level = skillLevel;
+    fetchCircles(params);
   }, [currentPage]);
 
   const handleApplyFilters = () => {

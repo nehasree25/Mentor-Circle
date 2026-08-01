@@ -1,19 +1,27 @@
 import React, { useState } from "react";
 import { X, Users, Send, CheckCircle, MessageSquare, User } from "lucide-react";
-import axios from "../../api/axios";
+import { mentorshipService } from "../../services/mentorshipService";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 
-export function PeerDetailsModal({ peer, isOpen, onClose, onSuccess }) {
+export function PeerDetailsModal({ peer, circleId, isOpen, onClose, onSuccess }) {
   const [isSending, setIsSending] = useState(false);
   const [message, setMessage] = useState("");
+  const [projectTopic, setProjectTopic] = useState("");
+  const [collaborationGoal, setCollaborationGoal] = useState("");
 
   if (!isOpen || !peer) return null;
 
   const handleSendRequest = async () => {
+    if (!circleId) {
+      toast.error("Circle context is required to send a collaboration request");
+      return;
+    }
     setIsSending(true);
     try {
-      await axios.post(`/peers/${peer.id}/send_collaboration_request/`, {
+      await mentorshipService.createCollaborationRequest(circleId, peer.id, {
+        project_topic: projectTopic || "Collaboration",
+        collaboration_goal: collaborationGoal || "Peer collaboration",
         message,
       });
       toast.success("Collaboration request sent!");
@@ -23,6 +31,28 @@ export function PeerDetailsModal({ peer, isOpen, onClose, onSuccess }) {
       toast.error(err.response?.data?.error || "Failed to send request");
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleAccept = async (requestId) => {
+    try {
+      await mentorshipService.acceptCollaborationRequest(requestId);
+      toast.success("Collaboration request accepted!");
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to accept request");
+    }
+  };
+
+  const handleDecline = async (requestId) => {
+    try {
+      await mentorshipService.rejectCollaborationRequest(requestId);
+      toast.success("Collaboration request declined.");
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to decline request");
     }
   };
 
@@ -44,10 +74,16 @@ export function PeerDetailsModal({ peer, isOpen, onClose, onSuccess }) {
       case "request_received":
         return (
           <div className="flex gap-3">
-            <button className="flex-1 rounded-xl bg-royal text-white py-3 font-semibold">
+            <button
+              onClick={() => handleAccept(peer.pending_request_id)}
+              className="flex-1 rounded-xl bg-royal text-white py-3 font-semibold hover:bg-darkblue transition-all"
+            >
               Accept
             </button>
-            <button className="flex-1 rounded-xl border border-borderline py-3 font-semibold">
+            <button
+              onClick={() => handleDecline(peer.pending_request_id)}
+              className="flex-1 rounded-xl border border-borderline py-3 font-semibold hover:bg-appbg transition-all"
+            >
               Decline
             </button>
           </div>
@@ -55,6 +91,18 @@ export function PeerDetailsModal({ peer, isOpen, onClose, onSuccess }) {
       default:
         return (
           <div className="space-y-3">
+            <input
+              value={projectTopic}
+              onChange={(e) => setProjectTopic(e.target.value)}
+              placeholder="Project topic (required)"
+              className="w-full rounded-xl border border-borderline p-3"
+            />
+            <input
+              value={collaborationGoal}
+              onChange={(e) => setCollaborationGoal(e.target.value)}
+              placeholder="Collaboration goal (required)"
+              className="w-full rounded-xl border border-borderline p-3"
+            />
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -65,7 +113,7 @@ export function PeerDetailsModal({ peer, isOpen, onClose, onSuccess }) {
             <div className="flex gap-3">
               <button
                 onClick={handleSendRequest}
-                disabled={isSending}
+                disabled={isSending || !projectTopic.trim() || !collaborationGoal.trim()}
                 className="flex-1 rounded-xl bg-royal hover:bg-darkblue text-white py-3 font-semibold disabled:opacity-70 flex items-center justify-center gap-2"
               >
                 <Send size={20} />
@@ -133,11 +181,14 @@ export function PeerDetailsModal({ peer, isOpen, onClose, onSuccess }) {
           )}
 
           {/* Interests */}
-          {peer.profile?.interests?.length > 0 && (
+          {peer.profile?.interests && peer.profile.interests.length > 0 && (
             <div>
               <h4 className="font-semibold text-navy mb-2">Interests</h4>
               <div className="flex flex-wrap gap-2">
-                {peer.profile.interests.map((interest, idx) => (
+                {(typeof peer.profile.interests === "string"
+                  ? peer.profile.interests.split(",").map(s => s.trim()).filter(Boolean)
+                  : peer.profile.interests
+                ).map((interest, idx) => (
                   <span
                     key={idx}
                     className="px-3 py-1.5 bg-softblue text-royal rounded-full text-sm font-medium"
@@ -150,11 +201,14 @@ export function PeerDetailsModal({ peer, isOpen, onClose, onSuccess }) {
           )}
 
           {/* Skills */}
-          {peer.profile?.skills?.length > 0 && (
+          {peer.profile?.skills && peer.profile.skills.length > 0 && (
             <div>
               <h4 className="font-semibold text-navy mb-2">Skills</h4>
               <div className="flex flex-wrap gap-2">
-                {peer.profile.skills.map((skill, idx) => (
+                {(typeof peer.profile.skills === "string"
+                  ? peer.profile.skills.split(",").map(s => s.trim()).filter(Boolean)
+                  : peer.profile.skills
+                ).map((skill, idx) => (
                   <span
                     key={idx}
                     className="px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-sm font-semibold"

@@ -20,6 +20,7 @@ import { mentorService } from "../services/mentorService";
 import { useAuth } from "../context/AuthContext";
 import ResourcesTab from "../components/circle/ResourcesTab";
 import { PeerDetailsModal } from "../components/peers/PeerDetailsModal";
+import RequestGuidanceModal from "../components/common/RequestGuidanceModal";
 
 const CircleDetail = () => {
   const { circleId } = useParams();
@@ -35,10 +36,11 @@ const CircleDetail = () => {
   const [currentCategory, setCurrentCategory] = useState('');
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [pollingInterval, setPollingInterval] = useState(null);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [selectedPeer, setSelectedPeer] = useState(null);
+  const [requestGuidanceMentor, setRequestGuidanceMentor] = useState(null);
   const messagesEndRef = useRef(null);
+  const pollingRef = useRef(null);
 
   const tabs = [
     { id: "overview", label: "Overview", icon: BookOpen },
@@ -137,8 +139,8 @@ const CircleDetail = () => {
     }
   };
 
-  const isUserMentor = (user) => {
-    return user?.profile?.role === 'mentor' || circle.mentors_list?.some(m => m.id === user.id);
+  const isUserMentorInCircle = (msgUser) => {
+    return msgUser?.profile?.role === 'mentor' || circle.mentors_list?.some(m => m.id === msgUser?.id);
   };
 
   const fetchPendingRequests = async () => {
@@ -187,12 +189,14 @@ const CircleDetail = () => {
     if (activeTab === "discussions") {
       fetchDiscussions();
       
-      const interval = setInterval(() => {
+      pollingRef.current = setInterval(() => {
         fetchDiscussions();
       }, 30000); // Poll every 30 seconds
-      setPollingInterval(interval);
 
-      return () => clearInterval(interval); // Cleanup on unmount
+      return () => {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      };
     }
   }, [activeTab, circleId, currentCategory]);
 
@@ -317,7 +321,9 @@ const CircleDetail = () => {
             <div className="flex items-center gap-3">
               <h1 className="text-4xl font-bold text-navy">{circle.name}</h1>
               {circle.is_private ? <Lock size={24} className="text-navy" /> : <Globe size={24} className="text-navy" />}
-              <span className="text-xs font-semibold text-white bg-royal px-3 py-1 rounded-full">Owner</span>
+              {circle.is_creator && <span className="text-xs font-semibold text-white bg-royal px-3 py-1 rounded-full">Owner</span>}
+              {circle.is_mentor && !circle.is_creator && <span className="text-xs font-semibold text-white bg-green-600 px-3 py-1 rounded-full">Mentor</span>}
+              {circle.is_member && !circle.is_creator && !circle.is_mentor && <span className="text-xs font-semibold text-white bg-gray-500 px-3 py-1 rounded-full">Member</span>}
             </div>
             <p className="text-textsecondary text-lg max-w-2xl">{circle.description || "No description provided"}</p>
             <div className="flex flex-wrap items-center gap-4 text-sm">
@@ -481,7 +487,9 @@ const CircleDetail = () => {
                               Mentor{circle.creator?.id === mentor.id ? ' • Owner' : ''}
                             </p>
                             <div className="mt-4 flex gap-2">
-                              <button className="flex-1 bg-softblue text-royal rounded-xl px-4 py-2 font-semibold hover:bg-royal hover:text-white transition-all">
+                              <button
+                                onClick={() => setRequestGuidanceMentor(mentor)}
+                                className="flex-1 bg-softblue text-royal rounded-xl px-4 py-2 font-semibold hover:bg-royal hover:text-white transition-all">
                                 Request Guidance
                               </button>
                               {circle.is_creator && (
@@ -647,7 +655,7 @@ const CircleDetail = () => {
                           <span className="font-bold text-navy">
                             {msg.user?.first_name} {msg.user?.last_name}
                           </span>
-                          {isUserMentor(msg.user) && (
+                          {isUserMentorInCircle(msg.user) && (
                             <span className="bg-softblue text-royal px-2 py-0.5 rounded-full text-xs font-bold">
                               Mentor
                             </span>
@@ -725,9 +733,19 @@ const CircleDetail = () => {
       {selectedPeer && (
         <PeerDetailsModal
           peer={selectedPeer}
+          circleId={circleId}
           isOpen={!!selectedPeer}
           onClose={() => setSelectedPeer(null)}
           onSuccess={() => {}}
+        />
+      )}
+
+      {/* Request Guidance Modal */}
+      {requestGuidanceMentor && (
+        <RequestGuidanceModal
+          mentor={requestGuidanceMentor}
+          preselectedCircleId={circleId}
+          onClose={() => setRequestGuidanceMentor(null)}
         />
       )}
     </div>
